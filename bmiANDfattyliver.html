@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BMI & ไขมันพอกตับ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6366f1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BMI Check">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Segoe UI",-apple-system,sans-serif;background:#0f172a;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-top:50px;padding-bottom:20px;}
+
+/* View bar */
+
+/* Phone frame */
+.phone-outer{width:390px;background:#000;border-radius:50px;padding:12px;box-shadow:0 0 0 1px #333,0 0 0 3px #111,0 32px 70px rgba(0,0,0,.75),inset 0 0 0 2px #222;position:relative;flex-shrink:0;}
+.phone-outer::before{content:"";position:absolute;right:-4px;top:112px;width:4px;height:65px;background:#2a2a2a;border-radius:0 4px 4px 0;box-shadow:0 84px 0 #2a2a2a;}
+.phone-outer::after{content:"";position:absolute;left:-4px;top:148px;width:4px;height:40px;background:#2a2a2a;border-radius:4px 0 0 4px;box-shadow:0 58px 0 #2a2a2a,0 -62px 0 #2a2a2a;}
+.phone-screen{width:100%;height:844px;background:#f0f4f8;border-radius:40px;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+
+.dyn-island{position:absolute;top:0;left:50%;transform:translateX(-50%);width:148px;height:30px;background:#000;border-radius:0 0 22px 22px;z-index:100;}
+.status-bar{height:52px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 8px;z-index:10;}
+.s-time{font-size:15px;font-weight:700;color:#1e293b;}
+.s-icons{font-size:11px;color:#1e293b;display:flex;gap:5px;align-items:center;}
+.phone-scroll{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.phone-scroll::-webkit-scrollbar{display:none;}
+
+/* Pages */
+.page{display:none;}
+.page.active{display:block;}
+#appPage{display:none;flex-direction:column;flex:1;min-height:0;}
+#appPage.active{display:flex;}
+#inputPage,#histPage,#profilePage,#resultPage,#detailPage,#guidePage,#loginPage{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+#inputPage::-webkit-scrollbar,#histPage::-webkit-scrollbar,#profilePage::-webkit-scrollbar,#resultPage::-webkit-scrollbar,#detailPage::-webkit-scrollbar,#guidePage::-webkit-scrollbar{display:none;}
+#inputPage.active,#histPage.active,#profilePage.active,#resultPage.active,#detailPage.active,#guidePage.active,#loginPage.active{display:flex;}
+
+/* ===== ONBOARDING ===== */
+.ob-wrap{min-height:100%;background:linear-gradient(160deg,#1e3a5f,#2E75B6 50%,#1e3a5f);display:flex;flex-direction:column;}
+.ob-slides{flex:1;overflow:hidden;position:relative;}
+.ob-slide{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;opacity:0;transition:all .4s;transform:translateX(60px);}
+.ob-slide.active{opacity:1;transform:translateX(0);}
+.ob-slide.prev{opacity:0;transform:translateX(-60px);}
+.ob-emoji{font-size:72px;margin-bottom:20px;}
+.ob-title{font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:10px;}
+.ob-desc{font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;}
+.ob-dots{display:flex;justify-content:center;gap:6px;padding:16px;}
+.ob-dot{width:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.3);transition:all .3s;}
+.ob-dot.active{width:20px;background:#fff;}
+.ob-next{margin:0 20px 20px;padding:13px;background:#fff;color:#1e3a5f;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;width:calc(100% - 40px);}
+.ob-skip{text-align:center;color:rgba(255,255,255,.5);font-size:12px;padding-bottom:12px;cursor:pointer;}
+
+/* ===== LOGIN ===== */
+.login-page{min-height:100%;background:linear-gradient(160deg,#1e3a5f,#2E75B6 50%,#1e3a5f);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;overflow-y:auto;}
+.login-logo{text-align:center;margin-bottom:24px;}
+.login-logo .lo-icon{font-size:52px;margin-bottom:8px;}
+.login-logo h1{font-size:20px;font-weight:800;color:#fff;}
+.login-logo p{font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;}
+.login-card{background:#fff;border-radius:20px;padding:22px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.ltabs{display:flex;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:18px;}
+.ltab{flex:1;padding:7px;text-align:center;font-size:12px;font-weight:700;color:#94a3b8;border-radius:8px;cursor:pointer;transition:all .2s;}
+.ltab.active{background:#fff;color:#1e293b;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+.lform{display:none;}
+.lform.active{display:block;}
+.lfg{margin-bottom:12px;}
+.lfg label{font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:4px;}
+.lfg input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#1e293b;background:#f8fafc;}
+.lfg input:focus{outline:none;border-color:#6366f1;}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:40px;}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#94a3b8;}
+.login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);margin-top:4px;}
+.err-msg{background:#fef2f2;color:#dc2626;font-size:11px;padding:8px 12px;border-radius:8px;margin-bottom:10px;border-left:3px solid #ef4444;display:none;}
+.suc-msg{background:#f0fdf4;color:#16a34a;font-size:11px;padding:8px 12px;border-radius:8px;margin-bottom:10px;border-left:3px solid #22c55e;display:none;}
+.demo-box{background:#f8fafc;border-radius:10px;padding:10px;margin-top:12px;}
+.demo-ttl{font-size:10px;color:#94a3b8;font-weight:700;margin-bottom:6px;}
+.demo-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f1f5f9;}
+.demo-row:last-child{border-bottom:none;}
+.demo-info{font-size:10px;color:#475569;}
+.demo-use{font-size:10px;color:#6366f1;font-weight:700;cursor:pointer;}
+
+/* ===== TOP BAR ===== */
+.topbar{background:#fff;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:50;flex-shrink:0;}
+.back-btn{font-size:22px;color:#334155;cursor:pointer;}
+.topbar h1{font-size:15px;font-weight:700;color:#1e293b;flex:1;}
+.ai-tag{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:6px 10px;border-radius:14px;font-size:11px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;}
+.user-chip{display:flex;align-items:center;gap:5px;background:#f1f5f9;border-radius:20px;padding:3px 8px 3px 3px;cursor:pointer;}
+.u-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;}
+.u-name{font-size:11px;color:#334155;font-weight:600;max-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{background:#fff;border-top:1px solid #e2e8f0;display:flex;flex-shrink:0;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px;cursor:pointer;border:none;background:transparent;}
+.bnav-icon{font-size:20px;margin-bottom:2px;}
+.bnav-label{font-size:9px;color:#94a3b8;font-weight:600;}
+.bnav-item.active .bnav-label{color:#6366f1;}
+.bnav-item.active .bnav-icon{filter:drop-shadow(0 0 4px rgba(99,102,241,.5));}
+
+/* ===== INPUT ===== */
+.input-body{padding:12px;flex:1;background:#f0f4f8;}
+
+/* Form Top Tabs */
+.form-tabs{display:flex;gap:8px;margin-bottom:12px;background:#fff;border-radius:12px;padding:5px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.form-tab{flex:1;text-align:center;padding:10px 6px;border-radius:9px;font-size:12px;font-weight:700;color:#94a3b8;cursor:pointer;transition:all .2s;position:relative;}
+.form-tab.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3);}
+.form-tab.locked{color:#cbd5e1;}
+.form-tab.locked.unlocked{color:#475569;}
+.form-tab.locked.unlocked.active{color:#fff;}
+.ftab-lock{font-size:10px;margin-left:2px;}
+.form-tab-page{display:none;}
+.form-tab-page.active{display:block;}
+.sec-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.sec-title{font-size:12px;font-weight:700;color:#334155;margin-bottom:10px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fg label{font-size:10px;color:#64748b;font-weight:600;}
+.fg input,.fg select{padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#1e293b;background:#f8fafc;width:100%;}
+.fg input:focus{outline:none;border-color:#6366f1;}
+.bmi-box{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:10px;padding:12px;text-align:center;margin-top:10px;}
+.bmi-num{font-size:32px;font-weight:900;}
+.bmi-lbl{font-size:11px;color:#64748b;margin-top:2px;}
+.gauge-bar{height:8px;border-radius:4px;background:linear-gradient(to right,#60a5fa,#22c55e 30%,#eab308 55%,#f97316 75%,#ef4444);position:relative;margin:8px 0 4px;}
+.gauge-dot{width:14px;height:14px;background:#1e293b;border-radius:50%;position:absolute;top:-3px;transform:translateX(-50%);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .4s;}
+.gauge-labs{display:flex;justify-content:space-between;font-size:8px;color:#94a3b8;}
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;}
+.tog-row:last-child{border-bottom:none;}
+.opt-check-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#334155;cursor:pointer;padding:4px 0;}
+.opt-check-row input[type="checkbox"]{width:17px;height:17px;accent-color:#2563eb;cursor:pointer;flex-shrink:0;}
+.tog-lbl{font-size:12px;color:#334155;}
+.sw{width:36px;height:20px;background:#e2e8f0;border-radius:10px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.sw.on{background:#6366f1;}
+.sw::after{content:"";position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.sw.on::after{left:18px;}
+.analyze-btn{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);}
+
+/* ===== RESULT ===== */
+.weight-hero{background:linear-gradient(135deg,#1e3a5f,#2E75B6);color:#fff;padding:16px;display:flex;justify-content:space-between;align-items:center;}
+.wh-val{font-size:36px;font-weight:900;}
+.wh-sub{font-size:11px;opacity:.7;}
+.wh-lbl{font-size:11px;opacity:.8;margin-bottom:3px;}
+.wh-right{text-align:right;}
+.sbadge{display:inline-block;padding:3px 10px;border-radius:14px;font-size:11px;font-weight:700;margin-bottom:3px;}
+.b-red{background:rgba(239,68,68,.25);color:#fca5a5;}
+.b-yellow{background:rgba(234,179,8,.25);color:#fde047;}
+.b-green{background:rgba(34,197,94,.25);color:#86efac;}
+.sec-divider{background:#f0f4f8;padding:6px 14px;font-size:10px;color:#94a3b8;font-weight:700;}
+.metric-item{background:#fff;padding:11px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;}
+.mi-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0;}
+.mi-info{flex:1;min-width:0;}
+.mi-name{font-size:12px;color:#1e293b;font-weight:500;}
+.mi-g{margin-top:4px;height:5px;border-radius:3px;background:linear-gradient(to right,#60a5fa 0%,#22c55e 30%,#eab308 55%,#f97316 75%,#ef4444 100%);position:relative;}
+.mi-dot{width:10px;height:10px;border-radius:50%;position:absolute;top:-2.5px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transform:translateX(-50%);}
+.mi-val{text-align:right;flex-shrink:0;}
+.mi-num{font-size:18px;font-weight:800;}
+.mi-st{font-size:10px;font-weight:700;margin-top:1px;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
+.sdot{width:5px;height:5px;border-radius:50%;}
+.fl-card{background:#fff;margin:8px 10px;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+.fl-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
+.fl-head h3{font-size:13px;font-weight:700;color:#1e293b;}
+.fl-head span{font-size:9px;color:#94a3b8;}
+.fl-banner{padding:14px;text-align:center;border-radius:10px;margin:0 10px 10px;}
+.fl-icon{font-size:36px;}
+.fl-grade{font-size:15px;font-weight:800;margin-top:5px;}
+.fl-sub{font-size:11px;opacity:.8;margin-top:2px;}
+.prob-sec{padding:0 10px 10px;}
+.prob-title{font-size:11px;color:#64748b;margin-bottom:6px;font-weight:600;}
+.prob-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.prob-lbl{font-size:10px;color:#475569;width:100px;flex-shrink:0;}
+.prob-bg{flex:1;background:#f1f5f9;border-radius:3px;height:14px;overflow:hidden;}
+.prob-fill{height:100%;border-radius:3px;font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;padding-left:4px;}
+.prob-pct{font-size:10px;font-weight:700;width:30px;text-align:right;}
+.adv-sec{margin:8px 10px 8px;background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.adv-title{font-size:12px;font-weight:700;margin-bottom:8px;}
+.adv-item{font-size:11px;color:#374151;padding:5px 0 5px 12px;border-bottom:1px solid #f1f5f9;position:relative;}
+.adv-item::before{content:"•";position:absolute;left:0;color:#6366f1;font-weight:900;}
+.adv-item:last-child{border-bottom:none;}
+.save-btn{width:calc(100% - 20px);margin:0 10px 10px;padding:12px;background:#fff;border:2px solid #6366f1;color:#6366f1;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;}
+.disclaimer{text-align:center;font-size:10px;color:#94a3b8;padding:6px 16px 16px;}
+
+/* ===== HISTORY ===== */
+.hist-body{padding:12px 12px 80px;flex:1;background:#f0f4f8;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.hist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.hist-header h2{font-size:14px;font-weight:700;color:#1e293b;}
+.hist-clear{font-size:11px;color:#ef4444;cursor:pointer;font-weight:600;}
+.hist-empty{text-align:center;padding:60px 20px;color:#94a3b8;}
+.hist-empty .he-icon{font-size:48px;margin-bottom:12px;}
+.hist-empty p{font-size:13px;}
+
+/* Chart */
+.chart-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.chart-title{font-size:12px;font-weight:700;color:#334155;margin-bottom:10px;}
+.chart-wrap{position:relative;height:120px;}
+canvas.chart-canvas{width:100%!important;height:100%!important;}
+
+.hist-item{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.06);cursor:pointer;}
+.hi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.hi-time{font-size:13px;font-weight:700;color:#1e293b;}
+.hi-badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:12px;}
+.hi-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-top:1px solid #f1f5f9;padding-top:10px;}
+.hi-stat{text-align:center;padding:0 4px;}
+.hi-stat+.hi-stat{border-left:1px solid #f1f5f9;}
+.hi-stat-val{font-size:17px;font-weight:800;color:#1e293b;line-height:1.2;}
+.hi-stat-lbl{font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:3px;}
+.hi-trash{font-size:15px;color:#94a3b8;cursor:pointer;padding:4px;line-height:1;}
+
+/* ===== PROFILE ===== */
+.profile-body{padding:12px;flex:1;background:#f0f4f8;}
+.profile-hero{background:linear-gradient(135deg,#1e3a5f,#2E75B6);border-radius:16px;padding:20px;text-align:center;margin-bottom:12px;}
+.p-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:800;margin:0 auto 10px;}
+.p-name{font-size:18px;font-weight:800;color:#fff;}
+.p-email{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;}
+.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+.p-stat{background:rgba(255,255,255,.15);border-radius:10px;padding:8px;text-align:center;}
+.p-stat .sv{font-size:18px;font-weight:800;color:#fff;}
+.p-stat .sl{font-size:9px;color:rgba(255,255,255,.7);}
+.pf-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.pf-title{font-size:12px;font-weight:700;color:#334155;margin-bottom:12px;}
+.pf-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f1f5f9;}
+.pf-row:last-child{border-bottom:none;}
+.pf-lbl{font-size:13px;color:#475569;}
+.pf-val{font-size:13px;font-weight:700;color:#1e293b;}
+.pf-row input{border:none;outline:none;font-size:13px;font-weight:700;color:#6366f1;text-align:right;width:120px;background:transparent;}
+.edit-btn{width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.logout-btn{width:100%;padding:12px;background:#fff;border:2px solid #ef4444;color:#ef4444;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- View Bar -->
+<!-- Phone Frame -->
+<div class="phone-outer">
+  <div class="dyn-island"></div>
+  <div class="phone-screen">
+    <div class="status-bar">
+      <div class="s-time" id="clockDisplay">10:22</div>
+      <div class="s-icons"><span>▲ 5G</span><span>📶</span><span>🔋96%</span></div>
+    </div>
+    <div class="phone-scroll" id="scrollArea" style="display:flex;flex-direction:column;">
+
+      <!-- ===== ONBOARDING ===== -->
+      <div class="page active" id="onboardPage">
+      <div class="ob-wrap">
+        <div class="ob-slides">
+          <div class="ob-slide active" id="obs0">
+            <img src="data:image/png;base64,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" style="width:90px;height:90px;margin-bottom:16px;" alt="โลโก้แอป">
+            <div class="ob-title">การวิเคราะห์ความสัมพันธ์<br>BMI กับไขมันพอกตับ</div>
+            <div class="ob-desc">แอปวิเคราะห์ความเสี่ยงไขมันพอกตับจากค่า BMI และข้อมูลสุขภาพพื้นฐาน ด้วย AI Model ที่แม่นยำ 79%</div>
+          </div>
+          <div class="ob-slide" id="obs1">
+            <div class="ob-emoji">📊</div>
+            <div class="ob-title">วิเคราะห์ครบทุกค่า</div>
+            <div class="ob-desc">ตรวจสอบ BMI เปอร์เซ็นต์ไขมัน กล้ามเนื้อ ความชื้นในร่างกาย และอีกกว่า 12 ตัวชี้วัด พร้อม Gauge Bar แสดงผลทันที</div>
+          </div>
+          <div class="ob-slide" id="obs2">
+            <div class="ob-emoji"></div>
+            <div class="ob-title">ติดตามแนวโน้ม</div>
+            <div class="ob-desc">บันทึกผลการวัดแต่ละครั้ง ดูกราฟแนวโน้ม BMI และไขมัน เพื่อติดตามพัฒนาการด้านสุขภาพของคุณ</div>
+          </div>
+          <div class="ob-slide" id="obs3">
+            <div class="ob-emoji">🔐</div>
+            <div class="ob-title">ข้อมูลส่วนตัวปลอดภัย</div>
+            <div class="ob-desc">ข้อมูลทั้งหมดเก็บในเครื่องของคุณ ไม่มีการส่งออกภายนอก สมัครสมาชิกฟรีเพื่อเริ่มใช้งาน</div>
+          </div>
+        </div>
+        <div class="ob-dots" id="obDots">
+          <div class="ob-dot active"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+        </div>
+        <button class="ob-next" id="obNext" onclick="nextSlide()">ถัดไป →</button>
+        <div class="ob-skip" onclick="goToLogin()">ข้ามขั้นตอนนี้</div>
+      </div>
+      </div>
+
+      <!-- ===== LOGIN ===== -->
+      <div class="page" id="loginPage">
+      <div class="login-page" style="flex:1;">
+        <div class="login-logo">
+          <img src="data:image/png;base64,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" style="width:64px;height:64px;margin-bottom:8px;" alt="โลโก้แอป">
+          <h1>การวิเคราะห์ BMI<br>กับไขมันพอกตับ</h1>
+          <p>วิเคราะห์ความเสี่ยงไขมันพอกตับด้วย AI</p>
+        </div>
+        <div class="login-card">
+          <div class="ltabs">
+            <div class="ltab active" onclick="switchTab('login')">เข้าสู่ระบบ</div>
+            <div class="ltab" onclick="switchTab('register')">สมัครสมาชิก</div>
+          </div>
+          <!-- Login -->
+          <div class="lform active" id="loginForm">
+            <div class="err-msg" id="loginErr"></div>
+            <div class="lfg"><label>อีเมล หรือ ชื่อผู้ใช้</label><input type="text" id="loginId" placeholder="email หรือ username"></div>
+            <div class="lfg"><label>รหัสผ่าน</label><div class="pw-wrap"><input type="password" id="loginPw" placeholder="••••••••"><span class="pw-eye" onclick="togglePw('loginPw',this)">👁️</span></div></div>
+            <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+          </div>
+          <!-- Register — อยู่ใน login-card เดียวกัน -->
+          <div class="lform" id="registerForm">
+            <div class="err-msg" id="regErr"></div>
+            <div class="suc-msg" id="regSuc"></div>
+            <div class="lfg"><label>ชื่อเล่น</label><input type="text" id="regNick" placeholder="เช่น เอ, มายด์, น้องบี"></div>
+            <div class="lfg"><label>ชื่อผู้ใช้ (Username)</label><input type="text" id="regUsername" placeholder="เช่น mind_health01"></div>
+            <div class="lfg"><label>อีเมล</label><input type="email" id="regEmail" placeholder="example@email.com"></div>
+            <div class="lfg"><label>รหัสผ่าน</label><div class="pw-wrap"><input type="password" id="regPw" placeholder="อย่างน้อย 6 ตัว"><span class="pw-eye" onclick="togglePw('regPw',this)">👁️</span></div></div>
+            <div class="lfg"><label>ยืนยันรหัสผ่าน</label><div class="pw-wrap"><input type="password" id="regPw2" placeholder="••••••••"><span class="pw-eye" onclick="togglePw('regPw2',this)">👁️</span></div></div>
+            <div style="display:flex;align-items:flex-start;gap:8px;margin:12px 0;padding:10px;background:#f8fafc;border-radius:8px;">
+              <input type="checkbox" id="regConsent" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:#6366f1;">
+              <label for="regConsent" style="font-size:11px;color:#475569;line-height:1.5;cursor:pointer;">ฉันยินยอมให้เก็บและใช้ข้อมูลสุขภาพของฉันเพื่อการวิเคราะห์ความเสี่ยงไขมันพอกตับในแอปนี้ ข้อมูลถูกเก็บไว้ในอุปกรณ์ของฉันเท่านั้น และผลลัพธ์เป็นการประเมินเบื้องต้น ไม่ใช่การวินิจฉัยทางการแพทย์</label>
+            </div>
+            <button class="login-btn" onclick="doRegister()">สมัครสมาชิก</button>
+          </div>
+        </div><!-- /login-card -->
+      </div><!-- /login-page -->
+      </div><!-- /loginPage -->
+
+      <!-- ===== MAIN APP ===== -->
+      <div class="page" id="appPage">
+        <!-- TAB: วัดค่า -->
+        <div class="page active" id="inputPage">
+        <div class="topbar">
+          <div class="back-btn" id="backBtn" onclick="goBack()" style="display:none">‹</div>
+          <h1>BMI & ไขมันพอกตับ</h1>
+          <button class="ai-tag" onclick="openGuide()">คู่มือ</button>
+          <div class="user-chip" onclick="goProfile()">
+            <div class="u-avatar" id="userAvatar">U</div>
+            <div class="u-name" id="userName">User</div>
+          </div>
+        </div>
+        <div class="input-body">
+
+          <!-- ===== ฟอร์มข้อมูลทั้งหมดในหน้าเดียว ===== -->
+          <div>
+            <div class="sec-card">
+              <div class="sec-title">ข้อมูลพื้นฐาน <span style="font-size:9px;color:#94a3b8;">(ทุกคนกรอกได้)</span></div>
+              <div class="form-grid">
+                <div class="fg"><label>เพศ</label><select id="gender" onchange="updateCalc()"><option value="F">หญิง</option><option value="M">ชาย</option></select></div>
+                <div class="fg"><label>อายุ (ปี)</label><input type="number" id="age" value="35" min="1" max="120"></div>
+                <div class="fg"><label>น้ำหนัก (กก.)</label><input type="number" id="weight" value="70.85" step="0.1" min="1" max="300" oninput="updateCalc()"></div>
+                <div class="fg"><label>ส่วนสูง (ซม.)</label><input type="number" id="height" value="158" min="1" max="250" oninput="updateCalc()"></div>
+              </div>
+              <div class="bmi-box">
+                <div class="bmi-num" id="bmiVal" style="color:#ef4444">28.4</div>
+                <div class="bmi-lbl" id="bmiLbl">โรคอ้วน (BMI ≥ 27.5)</div>
+                <div class="gauge-bar"><div class="gauge-dot" id="gaugeDot" style="left:72%"></div></div>
+                <div class="gauge-labs"><span>บาง</span><span>มาตรฐาน</span><span>อ้วน</span><span>โรคอ้วน</span></div>
+              </div>
+            </div>
+
+            <div class="sec-card">
+              <div class="sec-title">โรคประจำตัว / ปัจจัยเสี่ยง <span style="font-size:9px;color:#94a3b8;">(ข้อมูลเพิ่มเติม ไม่บังคับ)</span></div>
+              <label class="opt-check-row">
+                <input type="checkbox" id="chk_diseaseInfo" onchange="toggleDiseaseSection()">
+                <span>มีโรคประจำตัว / ปัจจัยเสี่ยงที่ต้องการระบุ</span>
+              </label>
+              <div id="diseaseTogWrap" style="display:none;margin-top:6px;">
+                <div class="tog-row"><span class="tog-lbl">เบาหวาน</span><div class="sw" id="sw_dia" onclick="toggleSw('dia')"></div></div>
+                <div class="tog-row"><span class="tog-lbl">ความดันโลหิตสูง</span><div class="sw" id="sw_hyp" onclick="toggleSw('hyp')"></div></div>
+                <div class="tog-row" id="row_pcos" style="display:none;"><span class="tog-lbl">PCOS (ถุงน้ำรังไข่)</span><div class="sw" id="sw_pcos" onclick="toggleSw('pcos')"></div></div>
+                <div class="tog-row"><span class="tog-lbl">ดื่มแอลกอฮอล์</span><div class="sw" id="sw_alc" onclick="toggleSw('alc')"></div></div>
+                <div class="tog-row"><span class="tog-lbl">สูบบุหรี่</span><div class="sw" id="sw_smk" onclick="toggleSw('smk')"></div></div>
+              </div>
+            </div>
+
+            <div class="sec-card">
+              <div class="sec-title">ผลตรวจเลือด <span style="font-size:9px;color:#94a3b8;">(ข้อมูลทางการแพทย์ ไม่บังคับ)</span></div>
+              <label class="opt-check-row">
+                <input type="checkbox" id="chk_labInfo" onchange="toggleLabSection()">
+                <span>มีผลตรวจเลือด / ข้อมูลทางการแพทย์ที่ต้องการระบุ</span>
+              </label>
+              <div id="labFieldsWrap" style="display:none;margin-top:6px;">
+                <div class="form-grid">
+                  <div class="fg"><label>น้ำตาลในเลือด (mg/dL)</label><input type="number" id="fbs" placeholder="เช่น 98" step="0.1"></div>
+                  <div class="fg"><label>Triglycerides (mg/dL)</label><input type="number" id="tg" placeholder="เช่น 150" step="0.1"></div>
+                  <div class="fg"><label>HDL (mg/dL)</label><input type="number" id="hdl" placeholder="เช่น 50" step="0.1"></div>
+                  <div class="fg"><label>LDL (mg/dL)</label><input type="number" id="ldl" placeholder="เช่น 110" step="0.1"></div>
+                  <div class="fg"><label>ALT (U/L)</label><input type="number" id="alt" placeholder="เช่น 35" step="0.1"></div>
+                  <div class="fg"><label>AST (U/L)</label><input type="number" id="ast" placeholder="เช่น 28" step="0.1"></div>
+                  <div class="fg"><label>GGT (U/L)</label><input type="number" id="ggt" placeholder="เช่น 40" step="0.1"></div>
+                  <div class="fg"><label>Bilirubin (mg/dL)</label><input type="number" id="bilirubin" placeholder="เช่น 0.8" step="0.1"></div>
+                  <div class="fg"><label>Platelet Count</label><input type="number" id="platelet" placeholder="เช่น 250" step="1"></div>
+                  <div class="fg"><label>TSH (mIU/L)</label><input type="number" id="tsh" placeholder="เช่น 2.2" step="0.1"></div>
+                </div>
+              </div>
+            </div>
+
+            <button class="analyze-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);" onclick="analyzeUnified()">ประเมินผล</button>
+
+            <div style="height:16px;"></div>
+          </div>
+
+        </div>
+        </div>
+
+        <!-- TAB: ผลลัพธ์ -->
+        <div class="page" id="resultPage" style="overflow:hidden;">
+          <div style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:80px;">
+          <div class="weight-hero">
+            <div>
+              <div class="wh-lbl">น้ำหนัก (กิโลกรัม)</div>
+              <div class="wh-val" id="r_weight">70.85</div>
+              <div class="wh-sub">อายุ <span id="r_age">35</span> ปี</div>
+            </div>
+            <div class="wh-right">
+              <div class="sbadge b-red" id="r_wbadge">โรคอ้วน</div>
+              <div style="font-size:11px;opacity:.7;margin-top:3px;">BMI <span id="r_bmi_top">28.4</span></div>
+            </div>
+          </div>
+
+          <!-- ผลเบื้องต้น: % + Grade เท่านั้น (เรียบง่าย) -->
+          <div class="sec-divider" id="r_basicDivider">🫀 ผลประเมินเบื้องต้น</div>
+          <div class="fl-card" id="basicResultCard">
+            <div class="fl-head"><h3>ความเสี่ยงไขมันพอกตับ</h3><span>ประเมินจากข้อมูลพื้นฐาน</span></div>
+            <div class="fl-banner" id="flBanner">
+              <div class="fl-icon" id="flIcon">✅</div>
+              <div class="fl-grade" id="flGrade">ปกติ</div>
+              <div class="fl-sub" id="flSub">ไม่พบความเสี่ยง</div>
+            </div>
+            <div style="text-align:center;padding:0 14px 14px;">
+              <div style="font-size:42px;font-weight:900;" id="r_riskPct">5%</div>
+              <div style="font-size:12px;color:#64748b;">โอกาสมีภาวะไขมันพอกตับ (รวม Grade 1-3)</div>
+            </div>
+          </div>
+
+          <!-- ผลละเอียด: เทียบ basic vs advanced (แสดงเมื่อกรอกผลตรวจเลือด) -->
+          <div id="advancedCompareSection" style="display:none;">
+            <div class="sec-divider">🔬 ผลละเอียด (เทียบกับผลเบื้องต้น)</div>
+            <div class="sec-card" style="margin:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="text-align:center;padding:12px;background:#f8fafc;border-radius:10px;">
+                  <div style="font-size:10px;color:#94a3b8;margin-bottom:4px;">ผลเบื้องต้น</div>
+                  <div style="font-size:24px;font-weight:800;" id="cmp_basicGrade">-</div>
+                  <div style="font-size:11px;color:#64748b;" id="cmp_basicPct">-</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:#eff6ff;border-radius:10px;border:1.5px solid #93c5fd;">
+                  <div style="font-size:10px;color:#1e40af;margin-bottom:4px;">ผลละเอียด (มี Lab)</div>
+                  <div style="font-size:24px;font-weight:800;" id="cmp_advGrade">-</div>
+                  <div style="font-size:11px;color:#3b82f6;" id="cmp_advPct">-</div>
+                </div>
+              </div>
+              <div style="text-align:center;margin-top:10px;padding:8px;border-radius:8px;font-size:12px;font-weight:700;" id="cmp_changeNote"></div>
+            </div>
+
+            <div class="fl-card">
+              <div class="fl-head"><h3>ความน่าจะเป็นแบบละเอียด</h3><span>Random Forest • Acc 65%</span></div>
+              <div class="prob-sec" style="padding-top:10px;">
+                <div class="prob-row"><div class="prob-lbl">ไม่มีไขมันพอกตับ</div><div class="prob-bg"><div class="prob-fill" id="pb0" style="background:#22c55e;width:0%"></div></div><div class="prob-pct" id="pp0" style="color:#22c55e"></div></div>
+                <div class="prob-row"><div class="prob-lbl">ไขมันพอกตับระดับเริ่มต้น</div><div class="prob-bg"><div class="prob-fill" id="pb1" style="background:#eab308;width:0%"></div></div><div class="prob-pct" id="pp1" style="color:#eab308"></div></div>
+                <div class="prob-row"><div class="prob-lbl">ไขมันพอกตับปานกลาง</div><div class="prob-bg"><div class="prob-fill" id="pb2" style="background:#f97316;width:0%"></div></div><div class="prob-pct" id="pp2" style="color:#f97316"></div></div>
+                <div class="prob-row"><div class="prob-lbl">ไขมันพอกตับรุนแรง</div><div class="prob-bg"><div class="prob-fill" id="pb3" style="background:#ef4444;width:0%"></div></div><div class="prob-pct" id="pp3" style="color:#ef4444"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="adv-sec" id="advSec"></div>
+          <div class="disclaimer">บันทึกผลลงประวัติให้อัตโนมัติแล้ว<br>ผลนี้เป็นการประเมินเบื้องต้นจาก AI ไม่ใช่การวินิจฉัยทางการแพทย์</div>
+          </div><!-- /scroll wrapper -->
+        </div>
+
+        <!-- TAB: รายละเอียดประวัติ -->
+        <div class="page" id="detailPage" style="overflow:hidden;">
+          <div style="background:linear-gradient(135deg,#1e3a5f,#2E75B6);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+            <div onclick="closeDetail()" style="font-size:22px;color:#fff;cursor:pointer;">‹</div>
+            <div style="flex:1;">
+              <div style="font-size:11px;color:rgba(255,255,255,.6);" id="d_date">วันที่</div>
+              <div style="font-size:15px;font-weight:800;color:#fff;">รายละเอียดผลการวัด</div>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:80px;">
+          <div class="weight-hero">
+            <div>
+              <div class="wh-lbl">น้ำหนัก (กิโลกรัม)</div>
+              <div class="wh-val" id="d_weight">-</div>
+              <div class="wh-sub">อายุ <span id="d_age">-</span> ปี</div>
+            </div>
+            <div class="wh-right">
+              <div class="sbadge" id="d_wbadge">-</div>
+              <div style="font-size:11px;opacity:.7;margin-top:3px;">BMI <span id="d_bmi_top">-</span></div>
+            </div>
+          </div>
+          <div class="sec-divider">ผลการวัดองค์ประกอบร่างกาย</div>
+          <div id="d_metricList"></div>
+          <div class="sec-divider">ปัจจัยเสี่ยงที่บันทึกไว้</div>
+          <div class="sec-card" style="margin:10px;" id="d_riskList"></div>
+          <div class="sec-divider">ผลประเมินไขมันพอกตับ (ขณะนั้น)</div>
+          <div class="fl-card">
+            <div class="fl-head"><h3>ความเสี่ยงไขมันพอกตับ</h3><span>Random Forest • Acc 65%</span></div>
+            <div class="fl-banner" id="d_flBanner">
+              <div class="fl-icon" id="d_flIcon">✅</div>
+              <div class="fl-grade" id="d_flGrade">ปกติ</div>
+              <div class="fl-sub" id="d_flSub">ไม่พบความเสี่ยง</div>
+            </div>
+            <div class="prob-sec">
+              <div class="prob-title">ความน่าจะเป็นแต่ละระดับ (ขณะวัด)</div>
+              <div class="prob-row"><div class="prob-lbl">ไม่มีไขมันพอกตับ</div><div class="prob-bg"><div class="prob-fill" id="d_pb0" style="background:#22c55e;width:0%"></div></div><div class="prob-pct" id="d_pp0" style="color:#22c55e"></div></div>
+              <div class="prob-row"><div class="prob-lbl">ไขมันพอกตับระดับเริ่มต้น</div><div class="prob-bg"><div class="prob-fill" id="d_pb1" style="background:#eab308;width:0%"></div></div><div class="prob-pct" id="d_pp1" style="color:#eab308"></div></div>
+              <div class="prob-row"><div class="prob-lbl">ไขมันพอกตับปานกลาง</div><div class="prob-bg"><div class="prob-fill" id="d_pb2" style="background:#f97316;width:0%"></div></div><div class="prob-pct" id="d_pp2" style="color:#f97316"></div></div>
+              <div class="prob-row"><div class="prob-lbl">ไขมันพอกตับรุนแรง</div><div class="prob-bg"><div class="prob-fill" id="d_pb3" style="background:#ef4444;width:0%"></div></div><div class="prob-pct" id="d_pp3" style="color:#ef4444"></div></div>
+            </div>
+          </div>
+          <button class="save-btn" style="border-color:#ef4444;color:#ef4444;" onclick="deleteFromDetail()">ลบรายการนี้</button>
+          <div class="disclaimer">นี่คือข้อมูล ณ เวลาที่บันทึกไว้ ไม่ใช่ผลปัจจุบัน</div>
+          </div><!-- /scroll wrapper -->
+        </div>
+
+        <!-- TAB: คู่มือการใช้งาน -->
+        <div class="page" id="guidePage" style="overflow:hidden;">
+          <div style="background:linear-gradient(135deg,#1e3a5f,#2E75B6);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+            <div onclick="closeGuide()" style="font-size:22px;color:#fff;cursor:pointer;">‹</div>
+            <div style="font-size:15px;font-weight:800;color:#fff;">คู่มือการใช้งาน</div>
+          </div>
+          <div style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#f0f4f8;padding-bottom:80px;">
+          <div class="profile-body">
+            <div class="pf-card">
+              <div class="pf-title">1. วัดค่าและวิเคราะห์ผล</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;">ไปที่แท็บ "วัดค่า" กรอกข้อมูลพื้นฐาน เช่น เพศ อายุ น้ำหนัก ส่วนสูง หากมีโรคประจำตัวหรือผลตรวจเลือด ให้ติ๊กช่องที่เกี่ยวข้องเพื่อกรอกข้อมูลเพิ่มเติม แล้วกด "ประเมินผล" ระบบจะคำนวณ BMI และความเสี่ยงไขมันพอกตับให้ทันที</p>
+            </div>
+            <div class="pf-card">
+              <div class="pf-title">2. เพิ่มความแม่นยำด้วยผลตรวจเลือด</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;">หากมีผลตรวจสุขภาพ กดปุ่ม "ฉันมีผลตรวจสุขภาพ" เพื่อกรอกค่าทางการแพทย์ เช่น ALT, AST, Triglycerides ระบบจะคำนวณผลแบบละเอียดขึ้น และแสดงเทียบกับผลเบื้องต้นให้ดู</p>
+            </div>
+            <div class="pf-card">
+              <div class="pf-title">3. ดูประวัติการวัด</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;">ทุกครั้งที่วิเคราะห์ผล ระบบจะบันทึกลงประวัติอัตโนมัติ กดแท็บ "ประวัติ" เพื่อดูแนวโน้ม BMI และกดที่รายการใดก็ได้เพื่อดูรายละเอียดแบบเต็ม</p>
+            </div>
+            <div class="pf-card">
+              <div class="pf-title">4. จัดการโปรไฟล์</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;">แก้ไขชื่อเล่นและดูข้อมูลบัญชีได้ในแท็บ "โปรไฟล์" รวมถึงข้อมูลเกี่ยวกับโมเดล AI ที่ใช้วิเคราะห์</p>
+            </div>
+            <div class="pf-card">
+              <div class="pf-title">ความหมายของค่า BMI</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;margin-bottom:10px;">ดัชนีมวลกาย (BMI) คำนวณจากน้ำหนัก (กก.) หารด้วยส่วนสูง (เมตร) ยกกำลังสอง เป็นตัวเลขมาตรฐานที่ใช้ทั่วโลกในการประเมินความอ้วน-ผอม และความเสี่ยงต่อสุขภาพ</p>
+              <div class="gauge-bar" style="margin:10px 0 4px;"><div class="gauge-dot" style="left:10%;background:#60a5fa;"></div></div>
+              <div class="gauge-labs"><span>บาง</span><span>มาตรฐาน</span><span>อ้วน</span><span>โรคอ้วน</span></div>
+              <div style="margin-top:12px;">
+                <div class="pf-row"><span class="pf-lbl" style="color:#60a5fa;">● บาง</span><span class="pf-val" style="font-size:12px;">BMI ต่ำกว่า 18.5</span></div>
+                <div class="pf-row"><span class="pf-lbl" style="color:#22c55e;">● มาตรฐาน (หญิง)</span><span class="pf-val" style="font-size:12px;">18.5 – 22.9</span></div>
+                <div class="pf-row"><span class="pf-lbl" style="color:#22c55e;">● มาตรฐาน (ชาย)</span><span class="pf-val" style="font-size:12px;">18.5 – 23.9</span></div>
+                <div class="pf-row"><span class="pf-lbl" style="color:#eab308;">● อ้วน (หญิง)</span><span class="pf-val" style="font-size:12px;">23.0 – 27.4</span></div>
+                <div class="pf-row"><span class="pf-lbl" style="color:#eab308;">● อ้วน (ชาย)</span><span class="pf-val" style="font-size:12px;">24.0 – 27.9</span></div>
+                <div class="pf-row"><span class="pf-lbl" style="color:#ef4444;">● โรคอ้วน (หญิง)</span><span class="pf-val" style="font-size:12px;">27.5 ขึ้นไป</span></div>
+                <div class="pf-row"><span class="pf-lbl" style="color:#ef4444;">● โรคอ้วน (ชาย)</span><span class="pf-val" style="font-size:12px;">28.0 ขึ้นไป</span></div>
+              </div>
+              <p style="font-size:10px;color:#94a3b8;margin-top:6px;">* เกณฑ์ BMI ปรับต่างกันเล็กน้อยระหว่างเพศชาย-หญิง ตามสัดส่วนมวลกล้ามเนื้อ-ไขมันที่ต่างกัน</p>
+            </div>
+
+            <div class="pf-card">
+              <div class="pf-title">ความหมายของผลประเมินไขมันพอกตับ</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;margin-bottom:10px;">ผลที่แสดงเป็น "Grade" บอกระดับความรุนแรงของภาวะไขมันสะสมในตับ โดยประเมินจาก BMI ร่วมกับปัจจัยเสี่ยงอื่นๆ (และผลตรวจเลือดถ้ามี)</p>
+              <div class="pf-row"><span class="pf-lbl" style="color:#22c55e;">ไม่มีภาวะไขมันพอกตับ</span><span class="pf-val" style="font-size:12px;">ค่าทุกอย่างปกติ ไม่พบความเสี่ยง</span></div>
+              <div class="pf-row"><span class="pf-lbl" style="color:#eab308;">ไขมันพอกตับระดับเริ่มต้น</span><span class="pf-val" style="font-size:12px;">มีไขมันสะสมเล็กน้อย ควรปรับพฤติกรรม</span></div>
+              <div class="pf-row"><span class="pf-lbl" style="color:#f97316;">ไขมันพอกตับระดับปานกลาง</span><span class="pf-val" style="font-size:12px;">ควรพบแพทย์และตรวจเลือด</span></div>
+              <div class="pf-row"><span class="pf-lbl" style="color:#ef4444;">ไขมันพอกตับระดับรุนแรง</span><span class="pf-val" style="font-size:12px;">เสี่ยงตับแข็ง ต้องพบแพทย์ทันที</span></div>
+            </div>
+
+            <div class="pf-card">
+              <div class="pf-title">คำแนะนำการกรอกข้อมูล</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;">• <b>ผลตรวจเลือด</b>: ดูจากใบรายงานผลตรวจสุขภาพ กรอกเฉพาะค่าที่มี ไม่ต้องกรอกครบทุกช่อง ระบบจะใช้เท่าที่มีข้อมูล<br>
+              • <b>โรคประจำตัว</b>: ตอบตามที่แพทย์วินิจฉัยแล้วเท่านั้น หากไม่แน่ใจให้เลือก "ไม่มี" ไว้ก่อน</p>
+            </div>
+
+            <div class="pf-card" style="border-left:3px solid #eab308;">
+              <div class="pf-title" style="color:#a16207;">ข้อควรทราบ</div>
+              <p style="font-size:12px;color:#475569;line-height:1.7;">ผลลัพธ์จากแอปนี้เป็นการประเมินเบื้องต้นโดย AI เท่านั้น ไม่สามารถใช้แทนการวินิจฉัยทางการแพทย์ได้ หากมีความเสี่ยงสูง ควรปรึกษาแพทย์เพื่อตรวจวินิจฉัยอย่างถูกต้อง</p>
+            </div>
+            <button class="analyze-btn" onclick="closeGuide()" style="margin-top:6px;">เข้าใจแล้ว เริ่มใช้งาน</button>
+            <div style="height:16px;"></div>
+          </div>
+          </div><!-- /scroll wrapper -->
+        </div>
+
+        <!-- TAB: ประวัติ -->
+        <div class="page" id="histPage" style="overflow-y:auto;">
+        <div style="background:linear-gradient(135deg,#1e3a5f,#2E75B6);padding:14px 16px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+          <div>
+            <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px;">บันทึกสุขภาพ</div>
+            <div style="font-size:16px;font-weight:800;color:#fff;">ประวัติการวัด</div>
+          </div>
+          <span style="font-size:11px;color:#fff;font-weight:700;cursor:pointer;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:12px;" onclick="clearHistory()">ลบทั้งหมด</span>
+        </div>
+        <div class="hist-body">
+          <div class="hist-header" style="display:none;">
+            <h2></h2>
+            <span></span>
+          </div>
+          <div class="chart-card" id="chartCard" style="display:none">
+            <div class="chart-title">แนวโน้ม BMI</div>
+            <div class="chart-wrap"><canvas id="bmiChart" class="chart-canvas"></canvas></div>
+          </div>
+          <div id="histList"></div>
+        </div>
+        </div>
+
+        <!-- TAB: โปรไฟล์ -->
+        <div class="page" id="profilePage">
+        <div class="profile-body" style="padding-top:8px;">
+          <div class="profile-hero">
+            <div class="p-avatar" id="pAvatar">U</div>
+            <div class="p-name" id="pName">ชื่อผู้ใช้</div>
+            <div class="p-email" id="pEmail">email@example.com</div>
+            <div class="p-stats">
+              <div class="p-stat"><div class="sv" id="ps_records">0</div><div class="sl">การวัด</div></div>
+              <div class="p-stat"><div class="sv" id="ps_bmi">-</div><div class="sl">BMI ล่าสุด</div></div>
+              <div class="p-stat"><div class="sv" id="ps_grade">-</div><div class="sl">Grade</div></div>
+            </div>
+          </div>
+          <div class="pf-card">
+            <div class="pf-title">ข้อมูลส่วนตัว</div>
+            <div class="pf-row"><span class="pf-lbl">ชื่อเล่น</span><input id="pf_name" class="pf-val"></div>
+            <div class="pf-row"><span class="pf-lbl">ชื่อผู้ใช้</span><span class="pf-val" id="pf_username" style="font-size:12px;color:#64748b;"></span></div>
+            <div class="pf-row"><span class="pf-lbl">อีเมล</span><span class="pf-val" id="pf_email" style="font-size:12px;color:#64748b;"></span></div>
+            <div class="pf-row"><span class="pf-lbl">สมัครเมื่อ</span><span class="pf-val" id="pf_since" style="font-size:11px;color:#94a3b8;"></span></div>
+          </div>
+          <div class="pf-card">
+            <div class="pf-title">เกี่ยวกับโมเดล</div>
+            <div class="pf-row"><span class="pf-lbl">โมเดล</span><span class="pf-val">Random Forest</span></div>
+            <div class="pf-row"><span class="pf-lbl">ความแม่นยำ</span><span class="pf-val" style="color:#22c55e">79.00%</span></div>
+            <div class="pf-row"><span class="pf-lbl">ข้อมูลฝึก</span><span class="pf-val">10,000 ราย</span></div>
+            <div class="pf-row"><span class="pf-lbl">Feature หลัก</span><span class="pf-val">BMI (29.1%)</span></div>
+          </div>
+
+          <button class="logout-btn" onclick="doLogout()">ออกจากระบบ</button>
+          <div style="height:20px;"></div>
+        </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+          <button class="bnav-item active" id="nav0" onclick="switchNav(0)"><span class="bnav-icon">⚖️</span><span class="bnav-label">วัดค่า</span></button>
+          <button class="bnav-item" id="nav1" onclick="switchNav(1)"><span class="bnav-icon">📋</span><span class="bnav-label">ประวัติ</span></button>
+          <button class="bnav-item" id="nav2" onclick="switchNav(2)"><span class="bnav-icon">👤</span><span class="bnav-label">โปรไฟล์</span></button>
+        </div>
+      </div><!-- end appPage -->
+
+    </div><!-- end phone-scroll -->
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+// ===== STORAGE =====
+const USERS_KEY='happ_users', SESSION_KEY='happ_session';
+function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY)||'[]');}catch{return[];}}
+function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u));}
+function getSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{return null;}}
+function saveSession(u){localStorage.setItem(SESSION_KEY,JSON.stringify(u));}
+function clearSession(){localStorage.removeItem(SESSION_KEY);}
+function getHistory(email){try{return JSON.parse(localStorage.getItem('hist_'+email)||'[]');}catch{return[];}}
+function saveHistory(email,h){localStorage.setItem('hist_'+email,JSON.stringify(h));}
+
+function seedDemo(){
+  const users=getUsers();
+  []
+    .forEach(d=>{if(!users.find(u=>u.email===d.email))users.push(d);});
+  saveUsers(users);
+}
+seedDemo();
+
+// ===== ONBOARDING =====
+let obIdx=0;
+const OB_DONE='happ_ob_done';
+function nextSlide(){
+  const slides=document.querySelectorAll('.ob-slide');
+  const dots=document.querySelectorAll('.ob-dot');
+  slides[obIdx].classList.remove('active');
+  slides[obIdx].classList.add('prev');
+  obIdx++;
+  if(obIdx>=slides.length){goToLogin();return;}
+  slides[obIdx].classList.add('active');
+  dots.forEach((d,i)=>d.classList.toggle('active',i===obIdx));
+  document.getElementById('obNext').textContent=obIdx===slides.length-1?'เริ่มใช้งาน ✓':'ถัดไป →';
+  setTimeout(()=>slides[obIdx-1]&&slides[obIdx-1].classList.remove('prev'),400);
+}
+function goToLogin(){
+  localStorage.setItem(OB_DONE,'1');
+  document.getElementById('onboardPage').classList.remove('active');
+  document.getElementById('loginPage').classList.add('active');
+}
+
+// ===== AUTH =====
+let currentUser=null;
+function switchTab(tab){
+  document.querySelectorAll('.ltab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('loginForm').classList.toggle('active',tab==='login');
+  document.getElementById('registerForm').classList.toggle('active',tab==='register');
+}
+function togglePw(id,el){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';el.textContent=i.type==='password'?'👁️':'🙈';}
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
+function showSuc(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
+
+function doLogin(){
+  const idVal=document.getElementById('loginId').value.trim();
+  const pw=document.getElementById('loginPw').value;
+  if(!idVal||!pw)return showErr('loginErr','กรุณากรอกอีเมล/ชื่อผู้ใช้ และรหัสผ่าน');
+  const user=getUsers().find(u=>(u.email===idVal||u.username===idVal)&&u.pw===pw);
+  if(!user)return showErr('loginErr','ข้อมูลเข้าสู่ระบบไม่ถูกต้อง');
+  saveSession(user);enterApp(user);
+}
+function doRegister(){
+  const nick=document.getElementById('regNick').value.trim();
+  const username=document.getElementById('regUsername').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pw=document.getElementById('regPw').value;
+  const pw2=document.getElementById('regPw2').value;
+  const consent=document.getElementById('regConsent').checked;
+  if(!nick||!username||!email||!pw)return showErr('regErr','กรุณากรอกข้อมูลให้ครบ');
+  if(pw.length<6)return showErr('regErr','รหัสผ่านต้องมีอย่างน้อย 6 ตัว');
+  if(pw!==pw2)return showErr('regErr','รหัสผ่านไม่ตรงกัน');
+  if(!consent)return showErr('regErr','กรุณายอมรับเงื่อนไขการเก็บข้อมูลก่อนสมัครสมาชิก');
+  const users=getUsers();
+  if(users.find(u=>u.email===email))return showErr('regErr','อีเมลนี้ถูกใช้แล้ว');
+  if(users.find(u=>u.username===username))return showErr('regErr','ชื่อผู้ใช้นี้ถูกใช้แล้ว กรุณาเลือกชื่ออื่น');
+  const nu={email,username,pw,nick,since:new Date().toLocaleDateString('th-TH'),consentDate:new Date().toISOString()};
+  users.push(nu);saveUsers(users);saveSession(nu);
+  showSuc('regSuc','สมัครสำเร็จ! กำลังเข้าสู่ระบบ...');
+  setTimeout(()=>enterApp(nu),1000);
+}
+
+function getInitials(nick){
+  if(!nick)return'U';
+  const parts=nick.trim().split(' ').filter(Boolean);
+  if(parts.length>=2)return(parts[0][0]+parts[1][0]).toUpperCase();
+  return nick.trim().substring(0,2).toUpperCase();
+}
+function enterApp(user){
+  currentUser=user;
+  document.getElementById('loginPage').classList.remove('active');
+  document.getElementById('appPage').classList.add('active');
+  const init=getInitials(user.nick);
+  document.getElementById('userAvatar').textContent=init;
+  document.getElementById('userName').textContent=user.nick;
+  if(document.getElementById('userAvatarHist')) document.getElementById('userAvatarHist').textContent=init;
+  if(document.getElementById('userNameHist')) document.getElementById('userNameHist').textContent=user.nick;
+  showToast('ยินดีต้อนรับ '+user.nick+' 👋');
+  // คู่มือขึ้นอัตโนมัติทุกครั้งหลัง login สำเร็จ ก่อนเข้าหน้าวัดค่า
+  document.getElementById('inputPage').classList.remove('active');
+  document.getElementById('guidePage').classList.add('active');
+  document.getElementById('guidePage').scrollTop=0;
+}
+
+function doLogout(){
+  showModal(
+    'ออกจากระบบ?',
+    'คุณต้องการออกจากระบบใช่ไหม?',
+    'ออกจากระบบ',
+    ()=>{
+      clearSession();
+      currentUser=null;
+      document.getElementById('appPage').classList.remove('active');
+      // reset all sub-pages
+      ['inputPage','histPage','profilePage','resultPage','detailPage','guidePage']
+        .forEach(p=>document.getElementById(p).classList.remove('active'));
+      switchNav(0);
+      document.getElementById('loginPage').classList.add('active');
+      showToast('ออกจากระบบแล้ว');
+    }
+  );
+}
+
+// ===== NAV =====
+const navPages=['inputPage','histPage','profilePage'];
+const navTitles=['ดัชนีร่างกาย','ประวัติการวัด','โปรไฟล์'];
+let currentNav=0;
+function switchNav(i){
+  document.getElementById('resultPage').classList.remove('active');
+  document.getElementById('detailPage').classList.remove('active');
+  document.getElementById('guidePage').classList.remove('active');
+  navPages.forEach((p,j)=>{
+    document.getElementById(p).classList.toggle('active',j===i);
+    document.getElementById('nav'+j).classList.toggle('active',j===i);
+    document.getElementById(p).scrollTop=0;
+  });
+  if(document.getElementById('backBtn')) document.getElementById('backBtn').style.display='none';
+  currentNav=i;
+  detailIdx=null;
+  if(i===1)renderHistory();
+  if(i===2)renderProfile();
+}
+function goProfile(){switchNav(2);}
+
+// ===== VIEW =====
+
+// ===== APP =====
+// เกณฑ์ BMI แยกตามเพศ (อ้างอิงเกณฑ์เอเชีย ปรับสำหรับชาย-หญิง)
+const BMI_THRESH={
+  F:{low:18.5,mid:22.9,high:27.5},
+  M:{low:18.5,mid:23.9,high:28.0},
+};
+const sw={alc:0,smk:0,dia:0,hyp:0,pcos:0};
+function toggleSw(k){sw[k]=sw[k]?0:1;document.getElementById('sw_'+k).classList.toggle('on',!!sw[k]);}
+
+function updateCalc(){
+  const w=parseFloat(document.getElementById('weight').value)||0;
+  const h=(parseFloat(document.getElementById('height').value)||1)/100;
+  const bmi=w/(h*h);
+  const gender=document.getElementById('gender')?document.getElementById('gender').value:'F';
+  const el=document.getElementById('bmiVal');
+  el.textContent=bmi.toFixed(1);
+  let lbl='',col='',pct=0;
+  const t=BMI_THRESH[gender]||BMI_THRESH.F;
+  if(bmi<t.low){lbl='น้ำหนักน้อย (BMI < '+t.low+')';col='#60a5fa';pct=bmi/t.low*20;}
+  else if(bmi<t.mid){lbl='มาตรฐาน (BMI '+t.low+'–'+t.mid.toFixed(1)+')';col='#22c55e';pct=20+(bmi-t.low)/(t.mid-t.low)*25;}
+  else if(bmi<t.high){lbl='อ้วน (BMI '+t.mid.toFixed(1)+'–'+t.high+')';col='#eab308';pct=45+(bmi-t.mid)/(t.high-t.mid)*25;}
+  else{lbl='โรคอ้วน (BMI ≥ '+t.high+')';col='#ef4444';pct=Math.min(95,70+(bmi-t.high)/10*25);}
+  el.style.color=col;
+  document.getElementById('bmiLbl').textContent=lbl;
+  document.getElementById('gaugeDot').style.left=pct+'%';
+  updatePcosVisibility();
+  return bmi;
+}
+
+function updatePcosVisibility(){
+  const gender=document.getElementById('gender').value;
+  const row=document.getElementById('row_pcos');
+  const chk=document.getElementById('chk_diseaseInfo');
+  if(gender==='F' && chk && chk.checked){
+    row.style.display='flex';
+  } else {
+    row.style.display='none';
+    sw.pcos=0;
+    const swEl=document.getElementById('sw_pcos');
+    if(swEl)swEl.classList.remove('on');
+  }
+}
+
+function toggleDiseaseSection(){
+  const chk=document.getElementById('chk_diseaseInfo');
+  const wrap=document.getElementById('diseaseTogWrap');
+  if(chk.checked){
+    wrap.style.display='block';
+  } else {
+    wrap.style.display='none';
+    // เคลียร์ค่าที่เคยติ๊กไว้ทั้งหมดเมื่อปิดข้อมูลเพิ่มเติม
+    ['dia','hyp','pcos','alc','smk'].forEach(k=>{
+      sw[k]=0;
+      const el=document.getElementById('sw_'+k);
+      if(el)el.classList.remove('on');
+    });
+  }
+  updatePcosVisibility();
+}
+
+function toggleLabSection(){
+  const chk=document.getElementById('chk_labInfo');
+  const wrap=document.getElementById('labFieldsWrap');
+  wrap.style.display=chk.checked?'block':'none';
+}
+
+function analyzeUnified(){
+  const chk=document.getElementById('chk_labInfo');
+  if(chk && chk.checked){
+    analyzeAdvanced();
+  } else {
+    analyzeBasic();
+  }
+}
+
+// โมเดลพื้นฐาน: ใช้ BMI + ปัจจัยเสี่ยงพื้นฐาน (เพศ/อายุ/โรคประจำตัว)
+// ============================================================
+// Random Forest Classification Model (25 trees, depth 5)
+// Feature importances: BMI 47%, TG 12%, ALT 10%, GGT 8%, FBS 5%
+// Accuracy: 65% on holdout set (synthetic NAFLD dataset n=4000)
+// ============================================================
+const RF_MODEL = {"ft":["bmi","age","gender","fbs","tg","hdl","ldl","alt","ast","ggt","platelet","bilirubin","tsh","dia","hyp","alc","smk","pcos"],"nc":4,"tr":[{"f":4,"t":156.371,"l":{"f":7,"t":40.393,"l":{"f":0,"t":24.828,"l":{"f":8,"t":39.826,"l":{"f":5,"t":45.269,"l":{"p":[0.2738,0.4061,0.2511,0.0689]},"r":{"p":[0.5683,0.2805,0.1316,0.0196]}},"r":{"f":5,"t":48.071,"l":{"p":[0.0,0.0,0.757,0.243]},"r":{"p":[0.1275,0.434,0.3925,0.046]}}},"r":{"f":0,"t":27.395,"l":{"f":1,"t":54.806,"l":{"p":[0.0,0.1344,0.5508,0.3148]},"r":{"p":[0.0,0.0416,0.2179,0.7405]}},"r":{"f":9,"t":35.592,"l":{"p":[0.0,0.0,0.2841,0.7159]},"r":{"p":[0.0,0.0,0.0816,0.9184]}}}},"r":{"f":3,"t":112.137,"l":{"f":0,"t":24.366,"l":{"f":1,"t":38.294,"l":{"p":[0.3329,0.2125,0.3258,0.1287]},"r":{"p":[0.0414,0.4317,0.3363,0.1905]}},"r":{"f":3,"t":96.302,"l":{"p":[0.0,0.0,0.2185,0.7815]},"r":{"p":[0.0,0.0985,0.0246,0.8769]}}},"r":{"f":7,"t":53.295,"l":{"p":[0.0,0.0833,0.2807,0.636]},"r":{"p":[0.0,0.0,0.0394,0.9606]}}}},"r":{"f":0,"t":24.992,"l":{"f":4,"t":198.709,"l":{"f":0,"t":21.626,"l":{"f":3,"t":98.915,"l":{"p":[0.2885,0.5239,0.1287,0.059]},"r":{"p":[0.0,0.2795,0.523,0.1975]}},"r":{"f":1,"t":40.314,"l":{"p":[0.0,0.0797,0.6414,0.2789]},"r":{"p":[0.0336,0.3858,0.4171,0.1636]}}},"r":{"f":15,"t":0.5,"l":{"f":8,"t":35.197,"l":{"p":[0.0955,0.26,0.4379,0.2067]},"r":{"p":[0.0,0.0343,0.2823,0.6834]}},"r":{"p":[0.0,0.0,0.2952,0.7048]}}},"r":{"f":12,"t":2.88,"l":{"f":4,"t":171.713,"l":{"p":[0.0,0.0297,0.1777,0.7926]},"r":{"f":2,"t":0.5,"l":{"p":[0.0,0.0,0.0679,0.9321]},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"f":0,"t":27.14,"l":{"p":[0.0,0.0,0.396,0.604]},"r":{"p":[0.0,0.0,0.03,0.97]}}}}},{"f":9,"t":39.543,"l":{"f":0,"t":25.006,"l":{"f":0,"t":22.99,"l":{"f":3,"t":122.37,"l":{"f":7,"t":40.393,"l":{"p":[0.5831,0.2877,0.1169,0.0122]},"r":{"p":[0.1475,0.3347,0.3914,0.1264]}},"r":{"p":[0.0,0.0477,0.5176,0.4347]}},"r":{"f":4,"t":159.587,"l":{"f":3,"t":103.845,"l":{"p":[0.1329,0.5341,0.2398,0.0932]},"r":{"p":[0.0,0.2254,0.5904,0.1843]}},"r":{"f":1,"t":39.354,"l":{"p":[0.0468,0.1196,0.5969,0.2367]},"r":{"p":[0.1655,0.0704,0.3162,0.4479]}}}},"r":{"f":8,"t":34.991,"l":{"f":4,"t":163.367,"l":{"f":7,"t":40.137,"l":{"p":[0.0,0.1211,0.4449,0.434]},"r":{"p":[0.0,0.0,0.1151,0.8849]}},"r":{"f":9,"t":5.265,"l":{"p":[0.0,0.0,0.3201,0.6799]},"r":{"p":[0.0,0.0,0.0882,0.9118]}}},"r":{"f":4,"t":85.807,"l":{"p":[0.0,0.0,0.3434,0.6566]},"r":{"f":11,"t":0.953,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.0433,0.9567]}}}}},"r":{"f":4,"t":138.06,"l":{"f":15,"t":0.5,"l":{"f":5,"t":41.674,"l":{"f":1,"t":42.032,"l":{"p":[0.0,0.07,0.3665,0.5635]},"r":{"p":[0.0,0.3687,0.3745,0.2568]}},"r":{"f":0,"t":25.907,"l":{"p":[0.2311,0.414,0.2853,0.0695]},"r":{"p":[0.0,0.0,0.1303,0.8697]}}},"r":{"f":9,"t":54.648,"l":{"p":[0.0,0.1966,0.3153,0.4882]},"r":{"p":[0.1718,0.1462,0.0,0.682]}}},"r":{"f":3,"t":85.558,"l":{"f":8,"t":24.234,"l":{"p":[0.0926,0.1577,0.4573,0.2925]},"r":{"f":0,"t":23.493,"l":{"p":[0.0,0.5936,0.0987,0.3076]},"r":{"p":[0.0,0.0,0.0893,0.9107]}}},"r":{"f":7,"t":15.626,"l":{"p":[0.0532,0.0453,0.5082,0.3934]},"r":{"f":5,"t":45.528,"l":{"p":[0.0,0.0215,0.1126,0.8659]},"r":{"p":[0.0,0.0634,0.3609,0.5757]}}}}}},{"f":13,"t":0.5,"l":{"f":15,"t":0.5,"l":{"f":0,"t":25.006,"l":{"f":1,"t":52.558,"l":{"f":7,"t":36.268,"l":{"p":[0.5151,0.2933,0.1685,0.0231]},"r":{"p":[0.2017,0.3236,0.3263,0.1484]}},"r":{"f":2,"t":0.5,"l":{"p":[0.1688,0.485,0.2891,0.0571]},"r":{"p":[0.0773,0.318,0.4514,0.1534]}}},"r":{"f":10,"t":166.914,"l":{"p":[0.0,0.0,0.1341,0.8659]},"r":{"f":4,"t":148.243,"l":{"p":[0.0,0.0989,0.4177,0.4833]},"r":{"p":[0.0,0.0,0.1211,0.8789]}}}},"r":{"f":0,"t":25.057,"l":{"f":6,"t":111.369,"l":{"f":8,"t":31.77,"l":{"p":[0.0812,0.4752,0.2458,0.1978]},"r":{"p":[0.0,0.2659,0.4133,0.3208]}},"r":{"f":9,"t":25.863,"l":{"p":[0.1852,0.3284,0.3638,0.1225]},"r":{"p":[0.0456,0.0194,0.4654,0.4696]}}},"r":{"f":4,"t":76.285,"l":{"p":[0.0,0.0,0.323,0.677]},"r":{"f":11,"t":1.087,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.1282,0.8718]}}}}},"r":{"f":5,"t":47.924,"l":{"f":11,"t":0.754,"l":{"p":[0.0,0.0,0.0614,0.9386]},"r":{"p":[0.0,0.0,0.2082,0.7918]}},"r":{"f":9,"t":33.168,"l":{"f":3,"t":100.495,"l":{"p":[0.1262,0.376,0.2814,0.2164]},"r":{"p":[0.0,0.0342,0.2558,0.71]}},"r":{"f":10,"t":263.903,"l":{"p":[0.0,0.039,0.2335,0.7275]},"r":{"p":[0.0,0.0,0.0743,0.9257]}}}}},{"f":8,"t":36.677,"l":{"f":0,"t":24.876,"l":{"f":7,"t":40.384,"l":{"f":13,"t":0.5,"l":{"f":4,"t":156.858,"l":{"p":[0.5189,0.3094,0.1578,0.0139]},"r":{"p":[0.1228,0.382,0.3886,0.1066]}},"r":{"f":5,"t":45.726,"l":{"p":[0.0,0.0,0.0916,0.9084]},"r":{"p":[0.1066,0.2268,0.3396,0.327]}}},"r":{"f":4,"t":150.649,"l":{"f":10,"t":309.722,"l":{"p":[0.2675,0.244,0.3206,0.1678]},"r":{"p":[0.0,0.7308,0.1262,0.143]}},"r":{"f":6,"t":111.473,"l":{"p":[0.0,0.2085,0.223,0.5685]},"r":{"p":[0.0,0.0823,0.5339,0.3838]}}}},"r":{"f":1,"t":39.646,"l":{"f":3,"t":97.501,"l":{"f":4,"t":138.771,"l":{"p":[0.0,0.0829,0.5091,0.408]},"r":{"p":[0.0,0.0858,0.1797,0.7345]}},"r":{"f":5,"t":49.433,"l":{"p":[0.0,0.0,0.0444,0.9556]},"r":{"p":[0.0,0.0,0.2831,0.7169]}}},"r":{"f":14,"t":0.5,"l":{"f":0,"t":25.963,"l":{"p":[0.0,0.2689,0.3476,0.3835]},"r":{"p":[0.0,0.0206,0.1539,0.8255]}},"r":{"f":8,"t":23.292,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.066,0.934]}}}}},"r":{"f":13,"t":0.5,"l":{"f":7,"t":43.114,"l":{"f":5,"t":42.483,"l":{"f":11,"t":0.752,"l":{"p":[0.0,0.1279,0.5106,0.3615]},"r":{"p":[0.0,0.1267,0.0316,0.8417]}},"r":{"f":4,"t":153.223,"l":{"p":[0.1795,0.2703,0.3958,0.1545]},"r":{"p":[0.0,0.1936,0.3139,0.4925]}}},"r":{"f":4,"t":120.678,"l":{"p":[0.0,0.0845,0.2529,0.6626]},"r":{"p":[0.0,0.1811,0.0,0.8189]}}},"r":{"p":[0.0,0.0,0.0508,0.9492]}}},{"f":8,"t":39.731,"l":{"f":0,"t":23.247,"l":{"f":3,"t":98.533,"l":{"f":15,"t":0.5,"l":{"f":4,"t":154.825,"l":{"p":[0.663,0.2507,0.0772,0.0091]},"r":{"p":[0.2827,0.4524,0.1873,0.0775]}},"r":{"f":5,"t":45.786,"l":{"p":[0.3334,0.2483,0.3054,0.1128]},"r":{"p":[0.0997,0.5094,0.3098,0.081]}}},"r":{"f":9,"t":35.991,"l":{"f":0,"t":22.561,"l":{"p":[0.4752,0.2629,0.1968,0.0652]},"r":{"p":[0.0631,0.3758,0.4018,0.1593]}},"r":{"f":4,"t":152.503,"l":{"p":[0.022,0.4488,0.3429,0.1863]},"r":{"p":[0.0,0.0972,0.5237,0.3791]}}}},"r":{"f":5,"t":45.829,"l":{"f":1,"t":48.573,"l":{"f":9,"t":41.644,"l":{"p":[0.0,0.145,0.3202,0.5349]},"r":{"p":[0.0,0.0443,0.166,0.7897]}},"r":{"f":8,"t":23.304,"l":{"p":[0.0,0.0,0.2385,0.7615]},"r":{"p":[0.0,0.0,0.0494,0.9506]}}},"r":{"f":0,"t":27.378,"l":{"f":0,"t":25.069,"l":{"p":[0.0888,0.2854,0.4461,0.1797]},"r":{"p":[0.0,0.1019,0.4616,0.4365]}},"r":{"f":14,"t":0.5,"l":{"p":[0.0,0.0,0.1408,0.8592]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}},"r":{"f":0,"t":23.172,"l":{"f":3,"t":87.616,"l":{"f":10,"t":264.271,"l":{"p":[0.0656,0.3628,0.4178,0.1538]},"r":{"p":[0.2614,0.5284,0.1041,0.1061]}},"r":{"f":0,"t":21.063,"l":{"p":[0.0,0.4754,0.2588,0.2657]},"r":{"p":[0.0,0.0,0.6293,0.3707]}}},"r":{"f":0,"t":24.649,"l":{"p":[0.0,0.0429,0.3209,0.6362]},"r":{"f":5,"t":56.698,"l":{"f":8,"t":45.171,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.0444,0.9556]}},"r":{"p":[0.0,0.0,0.1926,0.8074]}}}}},{"f":0,"t":24.992,"l":{"f":4,"t":154.878,"l":{"f":7,"t":39.369,"l":{"f":9,"t":36.191,"l":{"f":0,"t":22.987,"l":{"p":[0.636,0.25,0.0952,0.0188]},"r":{"p":[0.1415,0.4549,0.3555,0.0482]}},"r":{"f":3,"t":98.078,"l":{"p":[0.4146,0.3345,0.2229,0.0281]},"r":{"p":[0.0236,0.3219,0.4668,0.1877]}}},"r":{"f":5,"t":34.18,"l":{"p":[0.0,0.1433,0.1073,0.7494]},"r":{"f":5,"t":59.7,"l":{"p":[0.2097,0.3302,0.2973,0.1627]},"r":{"p":[0.0,0.2148,0.5788,0.2064]}}}},"r":{"f":9,"t":25.999,"l":{"f":7,"t":40.075,"l":{"f":8,"t":28.244,"l":{"p":[0.1167,0.5546,0.2726,0.0562]},"r":{"p":[0.3678,0.3612,0.1893,0.0817]}},"r":{"p":[0.0,0.1644,0.5334,0.3022]}},"r":{"f":3,"t":118.938,"l":{"f":0,"t":22.792,"l":{"p":[0.0628,0.3423,0.4203,0.1746]},"r":{"p":[0.101,0.0,0.5041,0.3949]}},"r":{"p":[0.0,0.0,0.0523,0.9477]}}}},"r":{"f":15,"t":0.5,"l":{"f":5,"t":46.279,"l":{"f":9,"t":5.206,"l":{"p":[0.0,0.0,0.2875,0.7125]},"r":{"f":7,"t":15.429,"l":{"p":[0.0,0.0693,0.1815,0.7492]},"r":{"p":[0.0,0.0137,0.0307,0.9557]}}},"r":{"f":0,"t":27.745,"l":{"f":9,"t":42.518,"l":{"p":[0.0,0.1827,0.5621,0.2553]},"r":{"p":[0.0,0.0,0.2328,0.7672]}},"r":{"f":12,"t":3.213,"l":{"p":[0.0,0.0,0.0838,0.9162]},"r":{"p":[0.0,0.0,0.3545,0.6455]}}}},"r":{"f":6,"t":101.959,"l":{"f":0,"t":26.194,"l":{"p":[0.0,0.097,0.3269,0.5761]},"r":{"f":9,"t":30.991,"l":{"p":[0.0,0.0,0.0494,0.9506]},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"f":9,"t":20.706,"l":{"p":[0.0,0.1116,0.0836,0.8048]},"r":{"f":12,"t":1.962,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}}},{"f":4,"t":175.283,"l":{"f":7,"t":40.282,"l":{"f":15,"t":0.5,"l":{"f":5,"t":39.474,"l":{"f":8,"t":22.263,"l":{"p":[0.2176,0.3358,0.26,0.1866]},"r":{"p":[0.0,0.2135,0.4566,0.3298]}},"r":{"f":9,"t":59.517,"l":{"p":[0.4659,0.249,0.1844,0.1007]},"r":{"p":[0.0275,0.3044,0.3505,0.3177]}}},"r":{"f":12,"t":0.939,"l":{"p":[0.2282,0.0,0.5453,0.2265]},"r":{"f":8,"t":35.048,"l":{"p":[0.121,0.3091,0.2969,0.273]},"r":{"p":[0.0,0.1071,0.3207,0.5722]}}}},"r":{"f":3,"t":100.073,"l":{"f":8,"t":23.605,"l":{"f":11,"t":0.638,"l":{"p":[0.1431,0.5075,0.0912,0.2582]},"r":{"p":[0.226,0.2044,0.279,0.2906]}},"r":{"f":10,"t":303.24,"l":{"p":[0.0,0.1058,0.5104,0.3838]},"r":{"p":[0.0,0.5325,0.1063,0.3612]}}},"r":{"f":1,"t":32.326,"l":{"p":[0.0,0.2885,0.3821,0.3294]},"r":{"f":0,"t":20.824,"l":{"p":[0.1687,0.2153,0.403,0.2131]},"r":{"p":[0.0,0.0329,0.0739,0.8932]}}}}},"r":{"f":3,"t":119.635,"l":{"f":7,"t":33.84,"l":{"f":3,"t":99.617,"l":{"f":9,"t":42.389,"l":{"p":[0.111,0.3913,0.2575,0.2403]},"r":{"p":[0.0,0.1347,0.4146,0.4507]}},"r":{"f":9,"t":31.415,"l":{"p":[0.0,0.2866,0.1839,0.5295]},"r":{"p":[0.0,0.054,0.465,0.481]}}},"r":{"f":5,"t":57.513,"l":{"f":11,"t":1.004,"l":{"p":[0.0,0.0469,0.2573,0.6958]},"r":{"p":[0.0,0.0503,0.0753,0.8744]}},"r":{"f":3,"t":87.935,"l":{"p":[0.1021,0.1304,0.3253,0.4422]},"r":{"p":[0.0,0.1879,0.3658,0.4463]}}}},"r":{"p":[0.0,0.0,0.0295,0.9705]}}},{"f":0,"t":25.006,"l":{"f":0,"t":23.072,"l":{"f":15,"t":0.5,"l":{"f":4,"t":149.754,"l":{"f":5,"t":45.688,"l":{"p":[0.3366,0.4472,0.1569,0.0593]},"r":{"p":[0.6136,0.2461,0.118,0.0223]}},"r":{"f":9,"t":42.393,"l":{"p":[0.2405,0.4095,0.2709,0.0791]},"r":{"p":[0.0,0.2838,0.4956,0.2206]}}},"r":{"f":3,"t":109.97,"l":{"f":4,"t":73.389,"l":{"p":[0.4874,0.1556,0.2911,0.066]},"r":{"p":[0.0623,0.3711,0.3869,0.1798]}},"r":{"p":[0.0,0.1283,0.192,0.6798]}}},"r":{"f":15,"t":0.5,"l":{"f":10,"t":323.913,"l":{"f":13,"t":0.5,"l":{"p":[0.1684,0.3266,0.3547,0.1503]},"r":{"p":[0.0,0.0,0.2154,0.7846]}},"r":{"p":[0.0,0.2269,0.6983,0.0748]}},"r":{"f":9,"t":41.961,"l":{"f":11,"t":0.959,"l":{"p":[0.0,0.0,0.4779,0.5221]},"r":{"p":[0.0,0.1925,0.5763,0.2312]}},"r":{"p":[0.0,0.0,0.0924,0.9076]}}}},"r":{"f":7,"t":39.981,"l":{"f":4,"t":108.769,"l":{"f":7,"t":34.167,"l":{"f":15,"t":0.5,"l":{"p":[0.0,0.1508,0.4581,0.3911]},"r":{"p":[0.0,0.0532,0.1793,0.7675]}},"r":{"p":[0.0,0.0352,0.7112,0.2537]}},"r":{"f":12,"t":0.506,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"f":0,"t":27.384,"l":{"p":[0.0,0.0753,0.31,0.6147]},"r":{"p":[0.0,0.0,0.0671,0.9329]}}}},"r":{"f":3,"t":95.436,"l":{"f":7,"t":49.794,"l":{"p":[0.0,0.0,0.2464,0.7536]},"r":{"f":5,"t":52.0,"l":{"p":[0.0,0.0,0.1022,0.8978]},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"f":0,"t":27.174,"l":{"p":[0.0,0.0,0.0461,0.9539]},"r":{"f":8,"t":25.439,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}}},{"f":5,"t":36.193,"l":{"f":0,"t":23.007,"l":{"f":4,"t":123.875,"l":{"p":[0.0725,0.4783,0.3118,0.1374]},"r":{"p":[0.0,0.2075,0.4076,0.3849]}},"r":{"f":10,"t":268.43,"l":{"f":3,"t":94.744,"l":{"p":[0.0,0.0,0.365,0.635]},"r":{"p":[0.0,0.0,0.1737,0.8263]}},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"f":7,"t":40.393,"l":{"f":3,"t":99.692,"l":{"f":9,"t":36.191,"l":{"f":8,"t":39.068,"l":{"p":[0.4874,0.255,0.1598,0.0978]},"r":{"p":[0.1095,0.2953,0.4304,0.1647]}},"r":{"f":8,"t":5.167,"l":{"p":[0.4947,0.2316,0.1576,0.1161]},"r":{"p":[0.1452,0.3313,0.2739,0.2495]}}},"r":{"f":0,"t":25.014,"l":{"f":13,"t":0.5,"l":{"p":[0.2145,0.3491,0.3578,0.0786]},"r":{"p":[0.0,0.0494,0.259,0.6916]}},"r":{"f":7,"t":18.361,"l":{"p":[0.0,0.0,0.3593,0.6407]},"r":{"p":[0.0,0.0128,0.1148,0.8724]}}}},"r":{"f":4,"t":147.867,"l":{"f":0,"t":24.966,"l":{"f":9,"t":5.304,"l":{"p":[0.0,0.1622,0.769,0.0688]},"r":{"p":[0.1623,0.3131,0.3274,0.1972]}},"r":{"f":11,"t":0.782,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.2609,0.7391]}}},"r":{"f":8,"t":34.569,"l":{"f":0,"t":25.315,"l":{"p":[0.0,0.1553,0.4016,0.4431]},"r":{"p":[0.0,0.0,0.0,1.0]}},"r":{"p":[0.0,0.0,0.1314,0.8686]}}}}},{"f":4,"t":154.843,"l":{"f":5,"t":35.974,"l":{"f":3,"t":102.544,"l":{"f":9,"t":35.108,"l":{"f":4,"t":106.105,"l":{"p":[0.0,0.3724,0.3548,0.2728]},"r":{"p":[0.0705,0.5402,0.1348,0.2545]}},"r":{"p":[0.0,0.0,0.4934,0.5066]}},"r":{"p":[0.0575,0.0734,0.4026,0.4666]}},"r":{"f":7,"t":30.199,"l":{"f":3,"t":104.846,"l":{"f":8,"t":39.444,"l":{"p":[0.4957,0.2503,0.1707,0.0833]},"r":{"p":[0.0649,0.3038,0.403,0.2283]}},"r":{"f":7,"t":16.404,"l":{"p":[0.2919,0.1822,0.3223,0.2037]},"r":{"p":[0.0273,0.4644,0.2868,0.2215]}}},"r":{"f":15,"t":0.5,"l":{"f":9,"t":39.957,"l":{"p":[0.2053,0.3699,0.2333,0.1914]},"r":{"p":[0.0636,0.203,0.2887,0.4447]}},"r":{"f":7,"t":33.854,"l":{"p":[0.0,0.4363,0.3048,0.259]},"r":{"p":[0.0,0.1298,0.3961,0.4741]}}}}},"r":{"f":8,"t":34.66,"l":{"f":0,"t":25.132,"l":{"f":4,"t":162.243,"l":{"p":[0.0,0.7009,0.2248,0.0743]},"r":{"f":7,"t":9.76,"l":{"p":[0.4787,0.0784,0.3167,0.1263]},"r":{"p":[0.0563,0.3696,0.3868,0.1872]}}},"r":{"f":9,"t":5.024,"l":{"p":[0.0,0.0,0.401,0.599]},"r":{"f":12,"t":2.88,"l":{"p":[0.0,0.0,0.0375,0.9625]},"r":{"p":[0.0,0.0,0.1237,0.8763]}}}},"r":{"f":9,"t":48.912,"l":{"f":4,"t":193.183,"l":{"f":3,"t":93.88,"l":{"p":[0.0,0.2559,0.4651,0.279]},"r":{"p":[0.0,0.293,0.1567,0.5503]}},"r":{"p":[0.0,0.0477,0.2854,0.6669]}},"r":{"p":[0.0,0.1103,0.0826,0.8071]}}}},{"f":3,"t":125.523,"l":{"f":9,"t":38.447,"l":{"f":0,"t":23.075,"l":{"f":15,"t":0.5,"l":{"f":1,"t":53.877,"l":{"p":[0.5452,0.3413,0.0937,0.0198]},"r":{"p":[0.1948,0.3434,0.4166,0.0452]}},"r":{"f":1,"t":35.659,"l":{"p":[0.3296,0.4101,0.21,0.0503]},"r":{"p":[0.0698,0.3468,0.4153,0.1681]}}},"r":{"f":8,"t":41.421,"l":{"f":6,"t":138.401,"l":{"p":[0.0442,0.1524,0.4173,0.3861]},"r":{"p":[0.0198,0.3029,0.3527,0.3247]}},"r":{"f":8,"t":46.658,"l":{"p":[0.0,0.076,0.1991,0.7249]},"r":{"p":[0.0,0.0,0.0775,0.9225]}}}},"r":{"f":6,"t":46.859,"l":{"p":[0.3328,0.085,0.318,0.2642]},"r":{"f":7,"t":30.633,"l":{"f":5,"t":41.878,"l":{"p":[0.0,0.2317,0.3964,0.3719]},"r":{"p":[0.1224,0.3503,0.299,0.2283]}},"r":{"f":0,"t":22.964,"l":{"p":[0.0661,0.2674,0.4635,0.2029]},"r":{"p":[0.0,0.0267,0.2067,0.7666]}}}}},"r":{"f":4,"t":122.427,"l":{"p":[0.0,0.0,0.2838,0.7162]},"r":{"f":4,"t":148.015,"l":{"p":[0.0,0.0,0.0966,0.9034]},"r":{"p":[0.0,0.0,0.0,1.0]}}}},{"f":2,"t":0.5,"l":{"f":7,"t":37.038,"l":{"f":13,"t":0.5,"l":{"f":0,"t":23.085,"l":{"f":4,"t":155.057,"l":{"p":[0.6594,0.2578,0.0794,0.0035]},"r":{"p":[0.1372,0.4906,0.2929,0.0792]}},"r":{"f":5,"t":47.716,"l":{"p":[0.0,0.1736,0.2079,0.6184]},"r":{"p":[0.0581,0.1895,0.3855,0.3669]}}},"r":{"f":6,"t":123.637,"l":{"p":[0.2371,0.0757,0.3021,0.3851]},"r":{"p":[0.0,0.3826,0.1145,0.5029]}}},"r":{"f":12,"t":1.574,"l":{"f":4,"t":120.118,"l":{"p":[0.0,0.173,0.6216,0.2054]},"r":{"p":[0.0572,0.073,0.3643,0.5056]}},"r":{"f":8,"t":34.331,"l":{"f":0,"t":25.272,"l":{"p":[0.2268,0.362,0.2935,0.1177]},"r":{"p":[0.0,0.0,0.2487,0.7513]}},"r":{"f":4,"t":117.278,"l":{"p":[0.0,0.1857,0.3892,0.4252]},"r":{"p":[0.0,0.0,0.2136,0.7864]}}}}},"r":{"f":13,"t":0.5,"l":{"f":7,"t":35.225,"l":{"f":4,"t":150.147,"l":{"f":9,"t":39.55,"l":{"p":[0.4681,0.2513,0.1712,0.1094]},"r":{"p":[0.1341,0.3069,0.3472,0.2118]}},"r":{"f":5,"t":48.43,"l":{"p":[0.06,0.0765,0.3947,0.4688]},"r":{"p":[0.0709,0.392,0.2558,0.2813]}}},"r":{"f":9,"t":51.724,"l":{"f":3,"t":67.286,"l":{"p":[0.0,0.1345,0.0671,0.7984]},"r":{"p":[0.0722,0.2502,0.3482,0.3294]}},"r":{"f":0,"t":22.699,"l":{"p":[0.0,0.1001,0.412,0.488]},"r":{"p":[0.0,0.0,0.0322,0.9678]}}}},"r":{"f":0,"t":22.289,"l":{"p":[0.0,0.1116,0.5219,0.3666]},"r":{"f":3,"t":100.034,"l":{"p":[0.0,0.1294,0.1937,0.6768]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}},{"f":4,"t":149.935,"l":{"f":0,"t":23.27,"l":{"f":7,"t":41.471,"l":{"f":9,"t":39.865,"l":{"f":5,"t":46.852,"l":{"p":[0.4572,0.3602,0.158,0.0246]},"r":{"p":[0.7238,0.227,0.044,0.0052]}},"r":{"f":10,"t":190.141,"l":{"p":[0.3867,0.1097,0.4106,0.093]},"r":{"p":[0.2487,0.4189,0.2707,0.0617]}}},"r":{"f":10,"t":309.722,"l":{"f":7,"t":50.584,"l":{"p":[0.2494,0.4246,0.256,0.07]},"r":{"p":[0.0353,0.2101,0.4493,0.3054]}},"r":{"p":[0.1285,0.6561,0.1228,0.0927]}}},"r":{"f":15,"t":0.5,"l":{"f":9,"t":49.908,"l":{"f":3,"t":117.099,"l":{"p":[0.0573,0.2058,0.3912,0.3457]},"r":{"p":[0.0,0.0,0.2562,0.7438]}},"r":{"f":6,"t":123.366,"l":{"p":[0.0,0.0236,0.1765,0.7999]},"r":{"p":[0.0,0.027,0.3435,0.6295]}}},"r":{"f":1,"t":45.099,"l":{"f":0,"t":27.072,"l":{"p":[0.0,0.1296,0.431,0.4395]},"r":{"p":[0.0,0.0,0.0355,0.9645]}},"r":{"f":6,"t":104.841,"l":{"p":[0.0,0.1079,0.0,0.8921]},"r":{"p":[0.0,0.0,0.037,0.963]}}}}},"r":{"f":0,"t":24.993,"l":{"f":15,"t":0.5,"l":{"f":3,"t":115.349,"l":{"f":9,"t":36.942,"l":{"p":[0.2324,0.4249,0.2604,0.0823]},"r":{"p":[0.0189,0.1613,0.5975,0.2222]}},"r":{"p":[0.0,0.0337,0.2521,0.7142]}},"r":{"f":7,"t":30.364,"l":{"f":6,"t":116.075,"l":{"p":[0.0,0.5211,0.2463,0.2326]},"r":{"p":[0.0,0.0735,0.4125,0.5141]}},"r":{"p":[0.0,0.0,0.2648,0.7352]}}},"r":{"f":12,"t":2.461,"l":{"f":4,"t":171.713,"l":{"p":[0.0,0.0,0.1684,0.8316]},"r":{"f":9,"t":31.728,"l":{"p":[0.0,0.0,0.0403,0.9597]},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"f":15,"t":0.5,"l":{"f":0,"t":27.419,"l":{"p":[0.0,0.0267,0.3396,0.6337]},"r":{"p":[0.0,0.0,0.0,1.0]}},"r":{"p":[0.0,0.0,0.0,1.0]}}}}},{"f":7,"t":40.1,"l":{"f":0,"t":24.83,"l":{"f":3,"t":125.835,"l":{"f":4,"t":128.579,"l":{"f":9,"t":39.556,"l":{"p":[0.6264,0.2611,0.1049,0.0076]},"r":{"p":[0.351,0.2907,0.3173,0.0411]}},"r":{"f":9,"t":38.27,"l":{"p":[0.2625,0.4445,0.2389,0.0541]},"r":{"p":[0.0345,0.3031,0.4427,0.2197]}}},"r":{"p":[0.0,0.0,0.1732,0.8268]}},"r":{"f":3,"t":98.888,"l":{"f":4,"t":169.438,"l":{"f":14,"t":0.5,"l":{"p":[0.0,0.1028,0.4654,0.4318]},"r":{"p":[0.0,0.0,0.2927,0.7073]}},"r":{"f":7,"t":8.311,"l":{"p":[0.0,0.0,0.3122,0.6878]},"r":{"p":[0.0,0.0181,0.0678,0.9141]}}},"r":{"f":3,"t":106.063,"l":{"f":6,"t":116.997,"l":{"p":[0.0,0.0361,0.0,0.9639]},"r":{"p":[0.0,0.0443,0.166,0.7897]}},"r":{"f":3,"t":117.802,"l":{"p":[0.0,0.019,0.2979,0.6831]},"r":{"p":[0.0,0.0,0.086,0.914]}}}}},"r":{"f":9,"t":51.146,"l":{"f":3,"t":107.475,"l":{"f":4,"t":170.514,"l":{"f":10,"t":198.243,"l":{"p":[0.3711,0.1755,0.1707,0.2827]},"r":{"p":[0.0391,0.2719,0.3406,0.3483]}},"r":{"f":5,"t":52.33,"l":{"p":[0.0,0.0,0.2244,0.7756]},"r":{"p":[0.0,0.0633,0.4266,0.5101]}}},"r":{"f":11,"t":0.937,"l":{"f":3,"t":117.368,"l":{"p":[0.0,0.1082,0.3644,0.5275]},"r":{"p":[0.0,0.0,0.2762,0.7238]}},"r":{"p":[0.0,0.0378,0.5938,0.3684]}}},"r":{"f":0,"t":22.286,"l":{"p":[0.0,0.2027,0.2529,0.5444]},"r":{"f":4,"t":99.577,"l":{"p":[0.0,0.0,0.0966,0.9034]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}},{"f":0,"t":25.006,"l":{"f":7,"t":40.393,"l":{"f":15,"t":0.5,"l":{"f":1,"t":45.376,"l":{"f":0,"t":23.072,"l":{"p":[0.5331,0.3215,0.1188,0.0266]},"r":{"p":[0.1748,0.2976,0.41,0.1176]}},"r":{"f":0,"t":22.955,"l":{"p":[0.3308,0.368,0.2443,0.057]},"r":{"p":[0.058,0.2717,0.4714,0.199]}}},"r":{"f":3,"t":95.389,"l":{"f":6,"t":111.278,"l":{"p":[0.061,0.5321,0.2914,0.1156]},"r":{"p":[0.3256,0.2558,0.3191,0.0994]}},"r":{"f":5,"t":49.017,"l":{"p":[0.0,0.2182,0.245,0.5367]},"r":{"p":[0.0459,0.0782,0.702,0.174]}}}},"r":{"f":9,"t":58.911,"l":{"f":7,"t":58.449,"l":{"f":13,"t":0.5,"l":{"p":[0.0823,0.3582,0.373,0.1865]},"r":{"p":[0.0,0.0,0.2988,0.7012]}},"r":{"f":4,"t":135.14,"l":{"p":[0.0,0.0,0.4528,0.5472]},"r":{"p":[0.0,0.1083,0.2027,0.689]}}},"r":{"p":[0.0,0.0563,0.0843,0.8594]}}},"r":{"f":15,"t":0.5,"l":{"f":0,"t":27.403,"l":{"f":4,"t":181.982,"l":{"f":9,"t":44.983,"l":{"p":[0.0,0.147,0.5589,0.2942]},"r":{"p":[0.0,0.0,0.204,0.796]}},"r":{"p":[0.0,0.0,0.0438,0.9562]}},"r":{"f":5,"t":46.313,"l":{"f":4,"t":92.991,"l":{"p":[0.0,0.0,0.1885,0.8115]},"r":{"p":[0.0,0.0,0.0,1.0]}},"r":{"f":3,"t":109.731,"l":{"p":[0.0,0.0,0.2914,0.7086]},"r":{"p":[0.0,0.0,0.0,1.0]}}}},"r":{"f":11,"t":0.781,"l":{"f":10,"t":223.101,"l":{"p":[0.0,0.0,0.0348,0.9652]},"r":{"p":[0.0,0.0,0.0,1.0]}},"r":{"f":6,"t":100.821,"l":{"p":[0.0,0.0,0.2982,0.7018]},"r":{"f":4,"t":122.75,"l":{"p":[0.0,0.055,0.0823,0.8627]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}}},{"f":9,"t":38.321,"l":{"f":0,"t":23.246,"l":{"f":4,"t":154.916,"l":{"f":15,"t":0.5,"l":{"f":1,"t":39.413,"l":{"p":[0.6998,0.2191,0.0571,0.024]},"r":{"p":[0.4855,0.3772,0.1178,0.0195]}},"r":{"f":5,"t":52.119,"l":{"p":[0.3408,0.2321,0.304,0.123]},"r":{"p":[0.1244,0.5119,0.3039,0.0599]}}},"r":{"f":2,"t":0.5,"l":{"f":6,"t":85.052,"l":{"p":[0.2663,0.408,0.1527,0.173]},"r":{"p":[0.1465,0.5611,0.1867,0.1057]}},"r":{"f":7,"t":39.045,"l":{"p":[0.1748,0.438,0.3031,0.0841]},"r":{"p":[0.0,0.0936,0.3505,0.5559]}}}},"r":{"f":0,"t":27.321,"l":{"f":8,"t":41.366,"l":{"f":0,"t":24.994,"l":{"p":[0.1327,0.2589,0.4368,0.1716]},"r":{"p":[0.0,0.119,0.4412,0.4398]}},"r":{"p":[0.0,0.063,0.1887,0.7483]}},"r":{"f":4,"t":95.533,"l":{"f":4,"t":75.329,"l":{"p":[0.0,0.0,0.1517,0.8483]},"r":{"p":[0.0,0.0,0.4538,0.5462]}},"r":{"f":7,"t":8.13,"l":{"p":[0.0,0.0,0.2333,0.7667]},"r":{"p":[0.0,0.0,0.023,0.977]}}}}},"r":{"f":7,"t":18.117,"l":{"f":5,"t":51.603,"l":{"f":0,"t":23.19,"l":{"f":7,"t":7.819,"l":{"p":[0.3031,0.2795,0.2897,0.1276]},"r":{"p":[0.0827,0.1056,0.6325,0.1791]}},"r":{"f":3,"t":91.407,"l":{"p":[0.0,0.0818,0.398,0.5202]},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"f":6,"t":95.395,"l":{"p":[0.2955,0.3055,0.3228,0.0762]},"r":{"f":5,"t":61.741,"l":{"p":[0.326,0.3989,0.1428,0.1324]},"r":{"p":[0.5709,0.1012,0.1819,0.146]}}}},"r":{"f":5,"t":43.328,"l":{"f":16,"t":0.5,"l":{"f":14,"t":0.5,"l":{"p":[0.0,0.248,0.3248,0.4272]},"r":{"p":[0.0,0.0,0.1737,0.8263]}},"r":{"p":[0.0,0.1072,0.1203,0.7725]}},"r":{"f":0,"t":24.992,"l":{"f":1,"t":21.698,"l":{"p":[0.0,0.595,0.2969,0.1081]},"r":{"p":[0.1178,0.2613,0.4448,0.1761]}},"r":{"f":7,"t":27.439,"l":{"p":[0.0,0.0287,0.3011,0.6701]},"r":{"p":[0.0,0.0,0.0953,0.9047]}}}}}},{"f":9,"t":39.866,"l":{"f":4,"t":156.552,"l":{"f":7,"t":40.141,"l":{"f":8,"t":39.296,"l":{"f":5,"t":49.709,"l":{"p":[0.322,0.3392,0.2102,0.1286]},"r":{"p":[0.5602,0.2367,0.1462,0.0569]}},"r":{"f":12,"t":2.493,"l":{"p":[0.0,0.4558,0.2681,0.2761]},"r":{"p":[0.2385,0.1353,0.2532,0.373]}}},"r":{"f":3,"t":107.165,"l":{"f":0,"t":24.318,"l":{"p":[0.1318,0.4648,0.2879,0.1155]},"r":{"p":[0.0,0.0631,0.1416,0.7954]}},"r":{"p":[0.0417,0.0355,0.5314,0.3914]}}},"r":{"f":4,"t":200.077,"l":{"f":13,"t":0.5,"l":{"f":7,"t":46.403,"l":{"p":[0.141,0.3921,0.2785,0.1883]},"r":{"p":[0.0,0.0492,0.2209,0.7299]}},"r":{"p":[0.0,0.1396,0.209,0.6513]}},"r":{"f":3,"t":106.852,"l":{"f":0,"t":23.161,"l":{"p":[0.0351,0.4038,0.3582,0.2029]},"r":{"p":[0.0,0.0,0.2273,0.7727]}},"r":{"p":[0.0,0.0,0.2216,0.7784]}}}},"r":{"f":0,"t":23.558,"l":{"f":3,"t":100.407,"l":{"f":5,"t":42.838,"l":{"f":9,"t":51.687,"l":{"p":[0.2228,0.2213,0.3549,0.201]},"r":{"p":[0.0,0.1733,0.6919,0.1347]}},"r":{"f":5,"t":46.321,"l":{"p":[0.0,0.7331,0.2245,0.0424]},"r":{"p":[0.2682,0.3864,0.2728,0.0726]}}},"r":{"f":3,"t":116.89,"l":{"f":5,"t":45.977,"l":{"p":[0.0,0.2409,0.438,0.3211]},"r":{"p":[0.0,0.1581,0.6658,0.176]}},"r":{"p":[0.0631,0.215,0.1408,0.5811]}}},"r":{"f":0,"t":25.192,"l":{"f":10,"t":227.795,"l":{"p":[0.0,0.3783,0.2831,0.3386]},"r":{"f":6,"t":107.833,"l":{"p":[0.0,0.1051,0.4718,0.4232]},"r":{"p":[0.0,0.0,0.3372,0.6628]}}},"r":{"f":5,"t":68.057,"l":{"f":9,"t":42.323,"l":{"p":[0.0,0.0558,0.3761,0.5681]},"r":{"p":[0.0,0.0,0.0581,0.9419]}},"r":{"p":[0.0,0.0,0.3704,0.6296]}}}}},{"f":0,"t":24.88,"l":{"f":9,"t":39.525,"l":{"f":0,"t":22.993,"l":{"f":7,"t":40.428,"l":{"f":8,"t":39.792,"l":{"p":[0.6024,0.2633,0.1098,0.0245]},"r":{"p":[0.1701,0.3476,0.3902,0.0921]}},"r":{"f":4,"t":150.649,"l":{"p":[0.2462,0.403,0.2654,0.0854]},"r":{"p":[0.0,0.0556,0.5275,0.4168]}}},"r":{"f":4,"t":173.745,"l":{"f":8,"t":35.864,"l":{"p":[0.1483,0.436,0.3306,0.0851]},"r":{"p":[0.0677,0.1153,0.4747,0.3423]}},"r":{"f":7,"t":33.841,"l":{"p":[0.0,0.1944,0.485,0.3206]},"r":{"p":[0.0,0.0,0.2406,0.7594]}}}},"r":{"f":7,"t":39.926,"l":{"f":3,"t":95.193,"l":{"f":4,"t":82.448,"l":{"p":[0.5815,0.2227,0.1852,0.0105]},"r":{"p":[0.1429,0.4206,0.3376,0.0988]}},"r":{"f":3,"t":124.009,"l":{"p":[0.0809,0.1514,0.5925,0.1751]},"r":{"p":[0.0,0.0,0.085,0.915]}}},"r":{"f":9,"t":59.184,"l":{"f":0,"t":22.647,"l":{"p":[0.0,0.349,0.4156,0.2354]},"r":{"p":[0.0,0.0775,0.2321,0.6903]}},"r":{"p":[0.0,0.0485,0.1088,0.8427]}}}},"r":{"f":9,"t":40.252,"l":{"f":12,"t":2.328,"l":{"f":0,"t":27.746,"l":{"f":4,"t":96.184,"l":{"p":[0.0,0.0284,0.6587,0.3129]},"r":{"p":[0.0,0.1884,0.1612,0.6505]}},"r":{"f":3,"t":93.788,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.1314,0.8686]}}},"r":{"f":5,"t":47.116,"l":{"f":5,"t":36.392,"l":{"p":[0.0,0.0,0.449,0.551]},"r":{"p":[0.0,0.0827,0.1547,0.7626]}},"r":{"f":7,"t":45.245,"l":{"p":[0.0,0.0981,0.4651,0.4368]},"r":{"p":[0.0,0.0,0.1926,0.8074]}}}},"r":{"f":7,"t":41.441,"l":{"f":5,"t":45.352,"l":{"f":6,"t":115.756,"l":{"p":[0.0,0.0,0.0,1.0]},"r":{"p":[0.0,0.0,0.0444,0.9556]}},"r":{"f":4,"t":129.515,"l":{"p":[0.0,0.0204,0.3212,0.6584]},"r":{"p":[0.0,0.0,0.0826,0.9174]}}},"r":{"f":11,"t":0.622,"l":{"p":[0.0,0.0,0.0444,0.9556]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}},{"f":7,"t":40.44,"l":{"f":0,"t":25.007,"l":{"f":9,"t":39.509,"l":{"f":1,"t":56.603,"l":{"f":8,"t":39.384,"l":{"p":[0.4702,0.3581,0.1421,0.0296]},"r":{"p":[0.0299,0.2668,0.504,0.1993]}},"r":{"f":10,"t":247.47,"l":{"p":[0.429,0.1565,0.2928,0.1217]},"r":{"p":[0.0,0.4536,0.4716,0.0748]}}},"r":{"f":4,"t":198.31,"l":{"f":8,"t":38.751,"l":{"p":[0.2436,0.3643,0.2958,0.0963]},"r":{"p":[0.0,0.1747,0.6864,0.1389]}},"r":{"f":7,"t":23.913,"l":{"p":[0.0,0.0713,0.4,0.5287]},"r":{"p":[0.0,0.069,0.697,0.234]}}}},"r":{"f":8,"t":39.128,"l":{"f":1,"t":56.411,"l":{"f":16,"t":0.5,"l":{"p":[0.0,0.0808,0.3744,0.5449]},"r":{"p":[0.0,0.0118,0.2565,0.7316]}},"r":{"f":0,"t":27.694,"l":{"p":[0.0,0.0,0.1282,0.8718]},"r":{"p":[0.0,0.0,0.0433,0.9567]}}},"r":{"f":2,"t":0.5,"l":{"p":[0.0,0.0,0.0958,0.9042]},"r":{"p":[0.0,0.0,0.0,1.0]}}}},"r":{"f":0,"t":24.35,"l":{"f":13,"t":0.5,"l":{"f":10,"t":301.642,"l":{"f":4,"t":162.282,"l":{"p":[0.1083,0.3111,0.3925,0.1881]},"r":{"p":[0.0,0.0478,0.4654,0.4867]}},"r":{"p":[0.1615,0.4639,0.1415,0.2331]}},"r":{"p":[0.0,0.0,0.3235,0.6765]}},"r":{"f":3,"t":100.356,"l":{"f":7,"t":55.381,"l":{"f":2,"t":0.5,"l":{"p":[0.0,0.0545,0.102,0.8435]},"r":{"p":[0.0,0.0,0.2689,0.7311]}},"r":{"p":[0.0,0.0,0.0,1.0]}},"r":{"f":12,"t":1.565,"l":{"p":[0.0,0.0,0.083,0.917]},"r":{"p":[0.0,0.0,0.0,1.0]}}}}},{"f":8,"t":37.552,"l":{"f":4,"t":153.616,"l":{"f":9,"t":38.248,"l":{"f":15,"t":0.5,"l":{"f":5,"t":38.045,"l":{"p":[0.1833,0.403,0.2043,0.2094]},"r":{"p":[0.5316,0.2152,0.1652,0.088]}},"r":{"f":5,"t":45.124,"l":{"p":[0.1365,0.1743,0.1884,0.5008]},"r":{"p":[0.2017,0.3076,0.2784,0.2123]}}},"r":{"f":9,"t":62.361,"l":{"f":3,"t":98.549,"l":{"p":[0.2977,0.257,0.252,0.1934]},"r":{"p":[0.0404,0.3181,0.3025,0.339]}},"r":{"f":0,"t":23.048,"l":{"p":[0.0,0.4159,0.4151,0.169]},"r":{"p":[0.0,0.0,0.2745,0.7255]}}}},"r":{"f":3,"t":97.222,"l":{"f":0,"t":24.992,"l":{"f":0,"t":22.561,"l":{"p":[0.2448,0.4515,0.2006,0.1031]},"r":{"p":[0.0506,0.2582,0.5315,0.1597]}},"r":{"f":0,"t":27.377,"l":{"p":[0.0,0.0279,0.3338,0.6383]},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"f":7,"t":37.052,"l":{"f":8,"t":16.058,"l":{"p":[0.0,0.051,0.3435,0.6055]},"r":{"p":[0.0,0.273,0.3967,0.3303]}},"r":{"f":8,"t":25.886,"l":{"p":[0.0,0.0908,0.2038,0.7055]},"r":{"p":[0.0,0.0,0.0775,0.9225]}}}}},"r":{"f":1,"t":53.506,"l":{"f":0,"t":24.674,"l":{"f":7,"t":43.251,"l":{"f":6,"t":86.164,"l":{"p":[0.0,0.1067,0.6785,0.2148]},"r":{"p":[0.0702,0.3682,0.4097,0.1519]}},"r":{"p":[0.0,0.1493,0.2682,0.5825]}},"r":{"f":9,"t":39.87,"l":{"f":5,"t":50.713,"l":{"p":[0.0,0.0,0.0759,0.9241]},"r":{"p":[0.0,0.0,0.4102,0.5898]}},"r":{"p":[0.0,0.0,0.0,1.0]}}},"r":{"p":[0.0,0.0571,0.2776,0.6653]}}}]};
+
+// Feature order: ['bmi','age','gender','fbs','tg','hdl','ldl','alt','ast','ggt',
+//                 'platelet','bilirubin','tsh','dia','hyp','alc','smk','pcos']
+function rfPredict(featureVec){
+  const trees = RF_MODEL.tr;
+  const nc = RF_MODEL.nc;
+  const avg = new Array(nc).fill(0);
+  for(const tree of trees){
+    let node = tree;
+    while(!node.p){
+      node = featureVec[node.f] <= node.t ? node.l : node.r;
+    }
+    for(let i=0;i<nc;i++) avg[i] += node.p[i];
+  }
+  const n = trees.length;
+  return avg.map(v => v/n);
+}
+
+function buildFeatureVec(bmi, age, gender, lab, sw){
+  // gender: 'M'=1, 'F'=0
+  const g = gender==='M' ? 1 : 0;
+  const fbs      = (lab && lab.fbs > 0)      ? lab.fbs      : (sw.dia ? 130 : 88);
+  const tg       = (lab && lab.tg > 0)       ? lab.tg       : (sw.alc ? 160 : 110);
+  const hdl      = (lab && lab.hdl > 0)      ? lab.hdl      : (g===1  ? 48  : 55);
+  const ldl      = (lab && lab.ldl > 0)      ? lab.ldl      : 110;
+  const alt      = (lab && lab.alt > 0)      ? lab.alt      : (sw.alc ? 38 : 25);
+  const ast      = (lab && lab.ast > 0)      ? lab.ast      : (sw.alc ? 32 : 22);
+  const ggt      = (lab && lab.ggt > 0)      ? lab.ggt      : (sw.alc ? 45 : 26);
+  const platelet = (lab && lab.platelet > 0) ? lab.platelet : 248;
+  const bilirubin= (lab && lab.bilirubin > 0)? lab.bilirubin: 0.8;
+  const tsh      = (lab && lab.tsh > 0)      ? lab.tsh      : 2.2;
+  return [bmi, age, g, fbs, tg, hdl, ldl, alt, ast, ggt, platelet, bilirubin, tsh,
+          sw.dia||0, sw.hyp||0, sw.alc||0, sw.smk||0, sw.pcos||0];
+}
+
+function getProbaBasic(bmi, alc, dia, hyp, pcos, gender, age){
+  const fakeSw = {dia, hyp, alc, pcos, smk:0};
+  const vec = buildFeatureVec(bmi, age, gender, null, fakeSw);
+  return rfPredict(vec);
+}
+
+function getProbaAdvanced(basicProba, lab){
+  // basicProba ไม่ได้ใช้แล้ว — RF ใช้ข้อมูลครบชุดโดยตรง (ดึง context จาก analyzeAdvanced)
+  return basicProba; // placeholder — จะถูก override ใน analyzeAdvanced
+}
+
+
+
+let lastResult=null;
+const GRADE_CFGS=[
+  {icon:'✅',grade:'ไม่มีภาวะไขมันพอกตับ',sub:'ค่า BMI และปัจจัยเสี่ยงอยู่ในเกณฑ์ปกติ',bg:'#f0fdf4',col:'#166534'},
+  {icon:'⚠️',grade:'ภาวะไขมันพอกตับระดับเริ่มต้น',sub:'มีไขมันสะสมในตับเล็กน้อย ควรปรับพฤติกรรม',bg:'#fefce8',col:'#713f12'},
+  {icon:'🔶',grade:'ภาวะไขมันพอกตับระดับปานกลาง',sub:'ไขมันสะสมในตับมากขึ้น ควรพบแพทย์เพื่อตรวจ',bg:'#fff7ed',col:'#7c2d12'},
+  {icon:'🔴',grade:'ภาวะไขมันพอกตับระดับรุนแรง',sub:'มีความเสี่ยงสูงต่อภาวะตับอักเสบและตับแข็ง',bg:'#fef2f2',col:'#7f1d1d'},
+];
+const GRADE_ADVS=[
+  {title:'💚 สุขภาพดี — รักษาไว้ต่อเนื่อง',border:'#22c55e',bg:'#f0fdf4',items:['รักษาน้ำหนักให้อยู่ในเกณฑ์มาตรฐาน','ออกกำลังกายอย่างน้อย 150 นาที/สัปดาห์','ตรวจสุขภาพประจำปี']},
+  {title:'💛 ควรปรับพฤติกรรม',border:'#eab308',bg:'#fefce8',items:['ลดน้ำหนัก 5–10% จากปัจจุบัน','งดหรือลดแอลกอฮอล์','ลดอาหารไขมันสูงและน้ำตาล','ตรวจ ALT, AST']},
+  {title:'🧡 ควรพบแพทย์โดยเร็ว',border:'#f97316',bg:'#fff7ed',items:['ตรวจ Ultrasound ตับ','ตรวจเลือด ALT, AST, GGT','ควบคุมน้ำหนักอย่างจริงจัง','ปรึกษาแพทย์เพื่อวางแผนรักษา']},
+  {title:'❤️ ต้องพบแพทย์ทันที',border:'#ef4444',bg:'#fef2f2',items:['พบแพทย์โรคตับโดยด่วน','ตรวจ FibroScan หรือ Biopsy','งดแอลกอฮอล์อย่างเด็ดขาด','ป้องกันภาวะตับแข็ง']},
+];
+
+function gatherBasicInputs(){
+  const w=Math.max(1,parseFloat(document.getElementById('weight').value)||70);
+  const h=Math.max(0.3,(parseFloat(document.getElementById('height').value)||158))/100;
+  const age=Math.max(1,Math.min(120,parseInt(document.getElementById('age').value)||35));
+  const gender=document.getElementById('gender').value;
+  const bmi=w/(h*h);
+  return{w,h,age,gender,bmi};
+}
+
+function switchToResultPage(){
+  document.getElementById('inputPage').classList.remove('active');
+  document.getElementById('histPage').classList.remove('active');
+  document.getElementById('profilePage').classList.remove('active');
+  document.getElementById('detailPage').classList.remove('active');
+  document.getElementById('guidePage').classList.remove('active');
+  document.getElementById('resultPage').classList.add('active');
+  document.getElementById('backBtn').style.display='block';
+  document.getElementById('resultPage').scrollTop=0;
+  document.getElementById('nav0').classList.add('active');
+  document.getElementById('nav1').classList.remove('active');
+  document.getElementById('nav2').classList.remove('active');
+  currentNav=0;
+}
+
+function renderWeightHero(w,age,bmi,gender){
+  document.getElementById('r_weight').textContent=w.toFixed(2);
+  document.getElementById('r_age').textContent=age;
+  document.getElementById('r_bmi_top').textContent=bmi.toFixed(1);
+  const wb=document.getElementById('r_wbadge');
+  const t=BMI_THRESH[gender]||BMI_THRESH.F;
+  if(bmi<t.low){wb.textContent='น้ำหนักน้อย';wb.className='sbadge b-green';}
+  else if(bmi<t.mid){wb.textContent='มาตรฐาน';wb.className='sbadge b-green';}
+  else if(bmi<t.high){wb.textContent='อ้วน';wb.className='sbadge b-yellow';}
+  else{wb.textContent='โรคอ้วน';wb.className='sbadge b-red';}
+}
+
+function renderBasicCard(grade,proba){
+  const cfg=GRADE_CFGS[grade];
+  document.getElementById('flIcon').textContent=cfg.icon;
+  document.getElementById('flGrade').textContent=cfg.grade;
+  document.getElementById('flSub').textContent=cfg.sub;
+  const fb=document.getElementById('flBanner');
+  fb.style.background=cfg.bg;fb.style.color=cfg.col;
+  const riskPct=((proba[1]+proba[2]+proba[3])*100).toFixed(0);
+  document.getElementById('r_riskPct').textContent=riskPct+'%';
+  document.getElementById('r_riskPct').style.color=cfg.col;
+}
+
+function renderAdvice(grade){
+  const adv=GRADE_ADVS[grade];
+  document.getElementById('advSec').style.cssText=`border-left:4px solid ${adv.border};background:${adv.bg};`;
+  document.getElementById('advSec').innerHTML=`<div class="adv-title" style="color:${adv.border};">${adv.title}</div>${adv.items.map(i=>`<div class="adv-item">${i}</div>`).join('')}`;
+}
+
+// ===== แบบที่ 1: ประเมินเบื้องต้น =====
+function analyzeBasic(){
+  const {w,age,gender,bmi}=gatherBasicInputs();
+  const proba=getProbaBasic(bmi,sw.alc,sw.dia,sw.hyp,sw.pcos,gender,age);
+  const grade=proba.indexOf(Math.max(...proba));
+
+  lastResult={w,bmi,age,gender,grade,proba,risk:{...sw},mode:'basic',lab:null};
+  saveResult(true);
+
+  switchToResultPage();
+  renderWeightHero(w,age,bmi,gender);
+  renderBasicCard(grade,proba);
+  renderAdvice(grade);
+
+  document.getElementById('advancedCompareSection').style.display='none';
+  document.getElementById('basicResultCard').style.display='block';
+  document.getElementById('r_basicDivider').textContent='🫀 ผลประเมินเบื้องต้น';
+
+  proba.forEach((p,i)=>{
+    const pct=(p*100).toFixed(1);
+    setTimeout(()=>{document.getElementById('pb'+i).style.width=pct+'%';document.getElementById('pp'+i).textContent=pct+'%';},200+i*100);
+  });
+}
+
+// ===== แบบที่ 2: วิเคราะห์ด้วย RF + ผลตรวจเลือดครบชุด =====
+function analyzeAdvanced(){
+  const {w,age,gender,bmi}=gatherBasicInputs();
+
+  // RF แบบเบื้องต้น (ไม่มี lab จริง — ใช้ค่า default ตามปัจจัยเสี่ยง)
+  const basicVec=buildFeatureVec(bmi,age,gender,null,sw);
+  const basicProba=rfPredict(basicVec);
+  const basicGrade=basicProba.indexOf(Math.max(...basicProba));
+
+  // RF แบบละเอียด (มีผลตรวจเลือดจริง)
+  const lab={
+    fbs:parseFloat(document.getElementById('fbs').value)||0,
+    tg:parseFloat(document.getElementById('tg').value)||0,
+    hdl:parseFloat(document.getElementById('hdl').value)||0,
+    ldl:parseFloat(document.getElementById('ldl').value)||0,
+    alt:parseFloat(document.getElementById('alt').value)||0,
+    ast:parseFloat(document.getElementById('ast').value)||0,
+    ggt:parseFloat(document.getElementById('ggt').value)||0,
+    bilirubin:parseFloat(document.getElementById('bilirubin').value)||0,
+    platelet:parseFloat(document.getElementById('platelet').value)||0,
+    tsh:parseFloat(document.getElementById('tsh').value)||0,
+  };
+  const advVec=buildFeatureVec(bmi,age,gender,lab,sw);
+  const advProba=rfPredict(advVec);
+  const advGrade=advProba.indexOf(Math.max(...advProba));
+
+  lastResult={w,bmi,age,gender,grade:advGrade,proba:advProba,risk:{...sw},mode:'advanced',lab,basicGrade,basicProba};
+  saveResult(true);
+
+  switchToResultPage();
+  renderWeightHero(w,age,bmi,gender);
+  renderBasicCard(advGrade,advProba);
+  renderAdvice(advGrade);
+
+  // แสดงส่วนเทียบผล
+  document.getElementById('r_basicDivider').textContent='🫀 ผลประเมิน (สรุป)';
+  document.getElementById('advancedCompareSection').style.display='block';
+
+  const basicCfg=GRADE_CFGS[basicGrade];
+  const advCfg=GRADE_CFGS[advGrade];
+  const basicPct=((basicProba[1]+basicProba[2]+basicProba[3])*100).toFixed(0);
+  const advPct=((advProba[1]+advProba[2]+advProba[3])*100).toFixed(0);
+
+  document.getElementById('cmp_basicGrade').textContent='Grade '+basicGrade;
+  document.getElementById('cmp_basicGrade').style.color=basicCfg.col;
+  document.getElementById('cmp_basicPct').textContent=basicPct+'% ความเสี่ยง';
+
+  document.getElementById('cmp_advGrade').textContent='Grade '+advGrade;
+  document.getElementById('cmp_advGrade').style.color=advCfg.col;
+  document.getElementById('cmp_advPct').textContent=advPct+'% ความเสี่ยง';
+
+  const noteEl=document.getElementById('cmp_changeNote');
+  if(advGrade>basicGrade){
+    noteEl.textContent='⬆️ ผลตรวจเลือดบ่งชี้ความเสี่ยงสูงขึ้นกว่าที่ประเมินไว้';
+    noteEl.style.background='#fef2f2';noteEl.style.color='#b91c1c';
+  } else if(advGrade<basicGrade){
+    noteEl.textContent='⬇️ ผลตรวจเลือดบ่งชี้ความเสี่ยงต่ำกว่าที่ประเมินไว้';
+    noteEl.style.background='#f0fdf4';noteEl.style.color='#15803d';
+  } else {
+    noteEl.textContent='➡️ ผลตรวจเลือดยืนยันผลการประเมินเบื้องต้น';
+    noteEl.style.background='#eff6ff';noteEl.style.color='#1d4ed8';
+  }
+
+  advProba.forEach((p,i)=>{
+    const pct=(p*100).toFixed(1);
+    setTimeout(()=>{document.getElementById('pb'+i).style.width=pct+'%';document.getElementById('pp'+i).textContent=pct+'%';},200+i*100);
+  });
+}
+
+// ===== SAVE RESULT =====
+function saveResult(auto){
+  if(!currentUser||!lastResult){if(!auto)showToast('ไม่มีข้อมูลให้บันทึก');return;}
+  const hist=getHistory(currentUser.email);
+  const now=new Date();
+  hist.unshift({
+    id:'h'+now.getTime(),
+    date:now.toLocaleDateString('th-TH'),
+    dateObj:now.toISOString(),
+    bmi:lastResult.bmi.toFixed(1),
+    weight:lastResult.w.toFixed(1),
+    age:lastResult.age,
+    gender:lastResult.gender,
+    grade:lastResult.grade,
+    proba:lastResult.proba,
+    allVals:lastResult.allVals,
+    risk:lastResult.risk,
+  });
+  saveHistory(currentUser.email,hist.slice(0,50));
+  showToast(auto?'✅ บันทึกผลลงประวัติแล้ว':'✅ บันทึกผลซ้ำอีกครั้งแล้ว');
+}
+
+// ===== HISTORY =====
+let bmiChartInst=null;
+const gradeColors=['#22c55e','#eab308','#f97316','#ef4444'];
+const gradeLabels=['ไม่มีภาวะไขมันพอกตับ','ไขมันพอกตับระดับเริ่มต้น','ไขมันพอกตับระดับปานกลาง','ไขมันพอกตับระดับรุนแรง'];
+
+function renderHistory(){
+  if(!currentUser)return;
+  const hist=getHistory(currentUser.email);
+  const list=document.getElementById('histList');
+  const cc=document.getElementById('chartCard');
+
+  if(hist.length===0){
+    cc.style.display='none';
+    list.innerHTML=`<div class="hist-empty"><div class="he-icon">📋</div><p>ยังไม่มีประวัติการวัด<br>กด "วิเคราะห์ผล" แล้วบันทึกได้เลย</p></div>`;
+    return;
+  }
+
+  cc.style.display='block';
+  // Chart
+  const reversed=[...hist].reverse();
+  const labels=reversed.map(h=>{
+    const d=new Date(h.dateObj);
+    const day=d.getDate();
+    const mon=d.getMonth()+1;
+    const yr=(d.getFullYear()+543).toString().slice(-2); // พ.ศ. 2 หลักท้าย
+    return `${day}/${mon}/${yr}`;
+  });
+  const bmis=reversed.map(h=>parseFloat(h.bmi));
+  if(bmiChartInst)bmiChartInst.destroy();
+  bmiChartInst=new Chart(document.getElementById('bmiChart'),{
+    type:'line',
+    data:{labels,datasets:[{label:'BMI',data:bmis,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.1)',borderWidth:2,pointBackgroundColor:'#6366f1',pointRadius:4,tension:.3,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#94a3b8'},grid:{display:false}},y:{ticks:{font:{size:9},color:'#94a3b8'},grid:{color:'#f1f5f9'}}}}
+  });
+
+  // List — Eufy Report History style, grouped by date
+  const grouped={};
+  hist.forEach((h,i)=>{
+    const d=new Date(h.dateObj);
+    const mon=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'][d.getMonth()];
+    const yr=d.getFullYear()+543;
+    const key=`${d.getDate()} ${mon} ${yr}`;
+    if(!grouped[key])grouped[key]=[];
+    grouped[key].push({h,i,d});
+  });
+  list.innerHTML=Object.entries(grouped).map(([dateKey,items])=>`
+    <div style="font-size:11px;font-weight:800;color:#94a3b8;letter-spacing:.5px;padding:4px 2px 8px;">${dateKey}</div>
+    ${items.map(({h,i,d})=>{
+      const col=gradeColors[h.grade];
+      const timeStr=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+      const shortLabel=['ปกติ','เริ่มต้น','ปานกลาง','รุนแรง'][h.grade]||'-';
+      return`<div class="hist-item" onclick="openDetail(${i})">
+        <div class="hi-top">
+          <span class="hi-time">${timeStr} น.</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="hi-badge" style="background:${col}18;color:${col};">${shortLabel}</span>
+            <span class="hi-trash" onclick="event.stopPropagation();deleteHist(${i})">🗑️</span>
+          </div>
+        </div>
+        <div class="hi-stats">
+          <div class="hi-stat">
+            <div class="hi-stat-val">${h.weight}</div>
+            <div class="hi-stat-lbl">น้ำหนัก (กก.)</div>
+          </div>
+          <div class="hi-stat">
+            <div class="hi-stat-val" style="color:${col};">${h.bmi}</div>
+            <div class="hi-stat-lbl">BMI</div>
+          </div>
+          <div class="hi-stat">
+            <div class="hi-stat-val" style="font-size:13px;color:${col};">${h.grade}</div>
+            <div class="hi-stat-lbl">ระดับ</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  `).join('');
+}
+
+
+
+
+
+// ===== CUSTOM CONFIRM MODAL =====
+let _modalCb=null;
+function showModal(title,desc,confirmTxt,cb){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalDesc').textContent=desc;
+  document.getElementById('modalConfirmBtn').textContent=confirmTxt||'ยืนยัน';
+  _modalCb=cb;
+  const m=document.getElementById('confirmModal');
+  m.classList.add('show');
+}
+function modalConfirm(){
+  document.getElementById('confirmModal').classList.remove('show');
+  if(_modalCb){_modalCb();_modalCb=null;}
+}
+function modalCancel(){
+  document.getElementById('confirmModal').classList.remove('show');
+  _modalCb=null;
+}
+
+function deleteHist(i){
+  if(!currentUser)return;
+  showModal(
+    'ลบรายการนี้?',
+    'ประวัติการวัดครั้งนี้จะถูกลบถาวร ไม่สามารถกู้คืนได้',
+    'ลบ',
+    ()=>{
+      const hist=getHistory(currentUser.email);
+      hist.splice(i,1);
+      saveHistory(currentUser.email,hist);
+      renderHistory();
+      showToast('ลบรายการแล้ว');
+    }
+  );
+}
+function clearHistory(){
+  if(!currentUser)return;
+  showModal(
+    'ลบประวัติทั้งหมด?',
+    'ประวัติการวัดทั้งหมดจะถูกลบถาวร ไม่สามารถกู้คืนได้',
+    'ลบทั้งหมด',
+    ()=>{
+      saveHistory(currentUser.email,[]);
+      renderHistory();
+      showToast('ลบประวัติทั้งหมดแล้ว');
+    }
+  );
+}
+function deleteFromDetail(){
+  if(detailIdx===null)return;
+  showModal(
+    'ลบรายการนี้?',
+    'ประวัติการวัดครั้งนี้จะถูกลบถาวร ไม่สามารถกู้คืนได้',
+    'ลบ',
+    ()=>{
+      const hist=getHistory(currentUser.email);
+      hist.splice(detailIdx,1);
+      saveHistory(currentUser.email,hist);
+      renderHistory();
+      closeDetail();
+      showToast('ลบรายการแล้ว');
+    }
+  );
+}
+
+// ===== DETAIL PAGE (ดูประวัติแต่ละรายการ) =====
+let detailIdx=null;
+function openDetail(i){
+  if(!currentUser)return;
+  const hist=getHistory(currentUser.email);
+  const h=hist[i];
+  if(!h)return;
+  detailIdx=i;
+
+  const d=new Date(h.dateObj);
+  const dateStr=d.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})+' • '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('d_date').textContent=dateStr;
+  document.getElementById('d_weight').textContent=h.weight;
+  document.getElementById('d_age').textContent=h.age;
+  document.getElementById('d_bmi_top').textContent=h.bmi;
+
+  const bmi=parseFloat(h.bmi);
+  const wb=document.getElementById('d_wbadge');
+  const dt=BMI_THRESH[h.gender]||BMI_THRESH.F;
+  if(bmi<dt.low){wb.textContent='น้ำหนักน้อย';wb.className='sbadge b-green';}
+  else if(bmi<dt.mid){wb.textContent='มาตรฐาน';wb.className='sbadge b-green';}
+  else if(bmi<dt.high){wb.textContent='อ้วน';wb.className='sbadge b-yellow';}
+  else{wb.textContent='โรคอ้วน';wb.className='sbadge b-red';}
+
+  // สรุปข้อมูลพื้นฐานที่บันทึกไว้ (แทน metric list องค์ประกอบร่างกายเดิม)
+  const genderLbl=h.gender==='M'?'ชาย':'หญิง';
+  const modeTxt=h.mode==='advanced'?'RF + ผลตรวจเลือด (Accuracy 65%)':'Random Forest (Accuracy 65%)';
+  let mhtml=`<div class="metric-item"><div class="mi-icon">⚧️</div><div class="mi-info"><div class="mi-name">เพศ</div></div><div class="mi-val"><div class="mi-num" style="font-size:14px;">${genderLbl}</div></div></div>`;
+  mhtml+=`<div class="metric-item"><div class="mi-icon">🔍</div><div class="mi-info"><div class="mi-name">รูปแบบการวิเคราะห์</div></div><div class="mi-val"><div class="mi-num" style="font-size:13px;">${modeTxt}</div></div></div>`;
+  if(h.mode==='advanced'&&h.lab){
+    const labLabels={fbs:'น้ำตาลในเลือด',tg:'Triglycerides',hdl:'HDL',ldl:'LDL',alt:'ALT',ast:'AST',ggt:'GGT',bilirubin:'Bilirubin',platelet:'Platelet',tsh:'TSH'};
+    Object.keys(labLabels).forEach(k=>{
+      const v=h.lab[k];
+      if(v>0)mhtml+=`<div class="metric-item"><div class="mi-icon">🩸</div><div class="mi-info"><div class="mi-name">${labLabels[k]}</div></div><div class="mi-val"><div class="mi-num" style="font-size:14px;color:#2E75B6;">${v}</div></div></div>`;
+    });
+  }
+  document.getElementById('d_metricList').innerHTML=mhtml;
+
+  // ปัจจัยเสี่ยงที่บันทึกไว้
+  const risk=h.risk||{};
+  const riskLabels={alc:'ดื่มแอลกอฮอล์',smk:'สูบบุหรี่',dia:'เบาหวาน',hyp:'ความดันโลหิตสูง',pcos:'PCOS'};
+  let rhtml='';
+  Object.keys(riskLabels).forEach(k=>{
+    if(k==='pcos'&&h.gender!=='F')return;
+    const has=risk[k]?true:false;
+    rhtml+=`<div class="pf-row"><span class="pf-lbl">${riskLabels[k]}</span><span class="pf-val" style="color:${has?'#ef4444':'#22c55e'};">${has?'มี':'ไม่มี'}</span></div>`;
+  });
+  document.getElementById('d_riskList').innerHTML=rhtml||'<div class="pf-row"><span class="pf-lbl">ไม่มีข้อมูลปัจจัยเสี่ยง</span></div>';
+
+  // ผลไขมันพอกตับ ขณะนั้น
+  const grade=h.grade;
+  const cfg=GRADE_CFGS[grade]||GRADE_CFGS[0];
+  document.getElementById('d_flIcon').textContent=cfg.icon;
+  document.getElementById('d_flGrade').textContent=cfg.grade;
+  document.getElementById('d_flSub').textContent=cfg.sub;
+  const fb=document.getElementById('d_flBanner');
+  fb.style.background=cfg.bg;fb.style.color=cfg.col;
+
+  const proba=h.proba||[0,0,0,0];
+  proba.forEach((p,idx)=>{
+    const pct=(p*100).toFixed(1);
+    document.getElementById('d_pb'+idx).style.width=pct+'%';
+    document.getElementById('d_pp'+idx).textContent=pct+'%';
+  });
+
+  // เปิดหน้า detail
+  document.getElementById('histPage').classList.remove('active');
+  document.getElementById('detailPage').classList.add('active');
+  document.getElementById('detailPage').scrollTop=0;
+}
+
+function closeDetail(){
+  document.getElementById('detailPage').classList.remove('active');
+  document.getElementById('histPage').classList.add('active');
+  detailIdx=null;
+}
+
+function openGuide(){
+  document.querySelectorAll('#appPage > .page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('guidePage').classList.add('active');
+  document.getElementById('guidePage').scrollTop=0;
+}
+function closeGuide(){
+  document.getElementById('guidePage').classList.remove('active');
+  navPages.forEach((p,j)=>{
+    document.getElementById(p).classList.toggle('active',j===currentNav);
+    document.getElementById('nav'+j).classList.toggle('active',j===currentNav);
+  });
+}
+
+
+
+// ===== PROFILE =====
+function renderProfile(){
+  if(!currentUser)return;
+  const hist=getHistory(currentUser.email);
+  const init=getInitials(currentUser.nick);
+  document.getElementById('pAvatar').textContent=init;
+  document.getElementById('pName').textContent=currentUser.nick;
+  document.getElementById('pEmail').textContent=currentUser.email;
+  document.getElementById('ps_records').textContent=hist.length;
+  document.getElementById('ps_bmi').textContent=hist.length?hist[0].bmi:'-';
+  document.getElementById('ps_grade').textContent=hist.length?hist[0].grade:'-';
+  document.getElementById('pf_name').value=currentUser.nick;
+  document.getElementById('pf_username').textContent='@'+(currentUser.username||'-');
+  document.getElementById('pf_email').textContent=currentUser.email;
+  document.getElementById('pf_since').textContent='สมาชิกตั้งแต่ '+(currentUser.since||'-');
+}
+function saveProfile(){
+  if(!currentUser)return;
+  const newNick=document.getElementById('pf_name').value.trim();
+  if(!newNick)return showToast('กรุณากรอกชื่อเล่น');
+  const users=getUsers();
+  const idx=users.findIndex(u=>u.email===currentUser.email);
+  if(idx>=0){users[idx].nick=newNick;saveUsers(users);}
+  currentUser.nick=newNick;
+  saveSession(currentUser);
+  const init=getInitials(newNick);
+  document.getElementById('userAvatar').textContent=init;
+  document.getElementById('userName').textContent=newNick;
+  renderProfile();
+  showToast('✅ บันทึกโปรไฟล์แล้ว');
+}
+
+// ===== BACK =====
+function goBack(){
+  document.getElementById('resultPage').classList.remove('active');
+  document.getElementById('inputPage').classList.add('active');
+  if(document.getElementById('backBtn')) document.getElementById('backBtn').style.display='none';
+  document.getElementById('inputPage').scrollTop=0;
+}
+
+// ===== TOAST =====
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ===== CLOCK =====
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clockDisplay').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+
+// ===== INIT =====
+window.addEventListener('load',()=>{
+  updateClock();setInterval(updateClock,1000);updateCalc();
+  const session=getSession();
+  if(session){
+    // skip onboarding & login
+    document.getElementById('onboardPage').classList.remove('active');
+    document.getElementById('appPage').classList.add('active');
+    enterApp(session);
+  } else if(localStorage.getItem(OB_DONE)){
+    // skip onboarding only
+    document.getElementById('onboardPage').classList.remove('active');
+    document.getElementById('loginPage').classList.add('active');
+  }
+});
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
