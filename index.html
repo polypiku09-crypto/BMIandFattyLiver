@@ -14,15 +14,15 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:"Segoe UI",-apple-system,sans-serif;background:#0f172a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 0;overflow:hidden;}
+body{font-family:"Segoe UI",-apple-system,sans-serif;background:#0f172a;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-top:50px;padding-bottom:20px;}
 
 /* View bar */
 
 /* Phone frame */
-.phone-outer{width:min(390px,calc(90vh/2.1641 + 24px));background:#000;border-radius:50px;padding:12px;box-shadow:0 0 0 1px #333,0 0 0 3px #111,0 32px 70px rgba(0,0,0,.75),inset 0 0 0 2px #222;position:relative;flex-shrink:0;}
-.phone-outer::before{content:"";display:none;}
-.phone-outer::after{content:"";display:none;}
-.phone-screen{width:100%;height:min(844px,90vh);aspect-ratio:390/844;background:#f0f4f8;border-radius:40px;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+.phone-outer{width:390px;background:#000;border-radius:50px;padding:12px;box-shadow:0 0 0 1px #333,0 0 0 3px #111,0 32px 70px rgba(0,0,0,.75),inset 0 0 0 2px #222;position:relative;flex-shrink:0;}
+.phone-outer::before{content:"";position:absolute;right:-4px;top:112px;width:4px;height:65px;background:#2a2a2a;border-radius:0 4px 4px 0;box-shadow:0 84px 0 #2a2a2a;}
+.phone-outer::after{content:"";position:absolute;left:-4px;top:148px;width:4px;height:40px;background:#2a2a2a;border-radius:4px 0 0 4px;box-shadow:0 58px 0 #2a2a2a,0 -62px 0 #2a2a2a;}
+.phone-screen{width:100%;height:844px;background:#f0f4f8;border-radius:40px;overflow:hidden;position:relative;display:flex;flex-direction:column;}
 
 .dyn-island{position:absolute;top:0;left:50%;transform:translateX(-50%);width:148px;height:30px;background:#000;border-radius:0 0 22px 22px;z-index:100;}
 .status-bar{height:52px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 8px;z-index:10;}
@@ -41,7 +41,7 @@ body{font-family:"Segoe UI",-apple-system,sans-serif;background:#0f172a;min-heig
 #inputPage.active,#histPage.active,#profilePage.active,#resultPage.active,#detailPage.active,#guidePage.active,#loginPage.active{display:flex;}
 
 /* ===== ONBOARDING ===== */
-.ob-wrap{flex:1;background:linear-gradient(160deg,#1e3a5f,#2E75B6 50%,#1e3a5f);display:flex;flex-direction:column;min-height:0;}
+.ob-wrap{min-height:100%;background:linear-gradient(160deg,#1e3a5f,#2E75B6 50%,#1e3a5f);display:flex;flex-direction:column;}
 .ob-slides{flex:1;overflow:hidden;position:relative;}
 .ob-slide{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;opacity:0;transition:all .4s;transform:translateX(60px);}
 .ob-slide.active{opacity:1;transform:translateX(0);}
@@ -248,7 +248,7 @@ canvas.chart-canvas{width:100%!important;height:100%!important;}
     <div class="phone-scroll" id="scrollArea" style="display:flex;flex-direction:column;">
 
       <!-- ===== ONBOARDING ===== -->
-      <div id="onboardPage" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div class="page active" id="onboardPage">
       <div class="ob-wrap">
         <div class="ob-slides">
           <div class="ob-slide active" id="obs0">
@@ -682,7 +682,7 @@ function nextSlide(){
 }
 function goToLogin(){
   localStorage.setItem(OB_DONE,'1');
-  document.getElementById('onboardPage').style.display='none';
+  document.getElementById('onboardPage').classList.remove('active');
   document.getElementById('loginPage').classList.add('active');
 }
 
@@ -1398,11 +1398,13 @@ window.addEventListener('load',()=>{
   updateClock();setInterval(updateClock,1000);updateCalc();
   const session=getSession();
   if(session){
-    document.getElementById('onboardPage').style.display='none';
+    // skip onboarding & login
+    document.getElementById('onboardPage').classList.remove('active');
     document.getElementById('appPage').classList.add('active');
     enterApp(session);
   } else if(localStorage.getItem(OB_DONE)){
-    document.getElementById('onboardPage').style.display='none';
+    // skip onboarding only
+    document.getElementById('onboardPage').classList.remove('active');
     document.getElementById('loginPage').classList.add('active');
   }
 });
